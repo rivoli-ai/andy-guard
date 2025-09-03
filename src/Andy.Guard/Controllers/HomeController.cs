@@ -109,7 +109,7 @@ public class HomeController : ControllerBase
     </div>
 </body>
 </html>";
-        
+
         return Content(html, "text/html");
     }
 }
