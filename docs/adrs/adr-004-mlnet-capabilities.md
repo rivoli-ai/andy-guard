@@ -20,7 +20,7 @@ ML.NET's recent tokenization expansion in version 4.0 added comprehensive suppor
 
 ## BERT-family tokenization options provide solid foundation
 
-ML.NET offers multiple tokenization approaches for BERT-family models through the BertTokenizer class, which implements WordPiece tokenization with BERT-specific optimizations. The tokenizer handles standard BERT requirements including special token management ([CLS], [SEP], [MASK]), token type IDs for sequence pairs, and attention mask generation. However, **a critical limitation exists**: ML.NET's tokenizers use different vocabularies and byte-level encoding than Hugging Face models, creating fundamental compatibility issues.
+ML.NET offers multiple tokenization approaches for BERT-family models through the BertTokenizer class, which implements WordPiece tokenization with BERT-specific optimizations. The tokenizer handles standard BERT requirements including special token management ([CLS], [SEP], [MASK]), token type IDs for sequence pairs, and attention mask generation. **However, **a critical limitation exists**: ML.NET's tokenizers use different vocabularies and byte-level encoding than Hugging Face models, creating fundamental compatibility issues.**
 
 The BertTokenizer supports 512-token sequences with automatic special token insertion and provides consistent APIs for encoding text to integer IDs. Yet when compared directly with Hugging Face tokenizers, ML.NET produces different token ID outputs for identical inputs, particularly for non-English text where byte-level BPE encoding differences become apparent.
 
