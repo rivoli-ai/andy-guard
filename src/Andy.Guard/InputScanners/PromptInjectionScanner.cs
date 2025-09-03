@@ -2,29 +2,44 @@ using Andy.Guard.InputScanners.Abstractions;
 
 namespace Andy.Guard.InputScanners;
 
-// TODO Implement this using the DebertaTokenizer to detect prompt injections
-// 1. Ensure the scanner follows the implementation of the popular prompt_injection scanner of https://github.com/protectai/llm-guard
-// 2. Attempt using the fine-tuned model from protectai/deberta-v3-base-prompt-injection
-// 3. If the model is proprietary and not usable for commerical use, revert to the base model microsoft/deberta-v3-base
+// NOTE: Placeholder stub. Replace internally with a DeBERTa model-backed implementation.
 public class PromptInjectionScanner : IPromptInjectionScanner
 {
-    public Task<ScanResult> ScanInputAsync(string input, ScanOptions? options)
+    private static readonly string[] Heuristics =
     {
-        throw new NotImplementedException();
-    }
+        "ignore previous",
+        "override",
+        "system:",
+        "act as",
+        "disregard the rules"
+    };
 
-    public Task<ScanResult> ScanOutputAsync(string output, ScanOptions? options)
-    {
-        throw new NotImplementedException();
-    }
+    public Task<ScanResult> ScanInputAsync(string input, ScanOptions? options = null)
+        => Task.FromResult(Analyze(input));
+
+    public Task<ScanResult> ScanOutputAsync(string output, ScanOptions? options = null)
+        => Task.FromResult(Analyze(output));
 
     public Task<IEnumerable<ScanResult>> ScanInputBatchAsync(IEnumerable<string> inputs)
-    {
-        throw new NotImplementedException();
-    }
+        => Task.FromResult(inputs.Select(Analyze) as IEnumerable<ScanResult>);
 
     public Task<IEnumerable<ScanResult>> ScanOutputBatchAsync(IEnumerable<string> outputs)
+        => Task.FromResult(outputs.Select(Analyze) as IEnumerable<ScanResult>);
+
+    private static ScanResult Analyze(string text)
     {
-        throw new NotImplementedException();
+        var detected = Heuristics.Any(h => text.Contains(h, StringComparison.OrdinalIgnoreCase));
+        return new ScanResult
+        {
+            IsInjectionDetected = detected,
+            ConfidenceScore = detected ? 0.8f : 0.2f,
+            RiskLevel = detected ? RiskLevel.Medium : RiskLevel.Low,
+            Metadata = new Dictionary<string, object>
+            {
+                ["length"] = text.Length,
+                ["heuristics"] = detected ? Heuristics : Array.Empty<string>()
+            },
+            ProcessingTime = TimeSpan.FromMilliseconds(1)
+        };
     }
 }
