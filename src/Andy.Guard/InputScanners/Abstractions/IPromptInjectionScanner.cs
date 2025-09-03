@@ -1,6 +1,4 @@
-﻿using Andy.Guard.Scanner;
-
-namespace Andy.Guard;
+﻿namespace Andy.Guard.InputScanners.Abstractions;
 
 public interface IPromptInjectionScanner
 {

@@ -1,6 +1,4 @@
-using System;
-
-namespace Andy.Guard.Tokenizer;
+namespace Andy.Guard.Tokenizers.Deberta;
 
 /// <summary>
 /// Encoded outputs for DeBERTa-style tokenization (IDs and attention mask).
@@ -14,7 +12,7 @@ namespace Andy.Guard.Tokenizer;
 /// </list>
 /// <para><c>AttentionMask</c> marks real tokens as 1 and padding as 0. For DeBERTa v3, <c>token_type_ids</c> are not used.</para>
 /// </remarks>
-/// <seealso cref="Andy.Guard.Tokenizer.Deberta.DebertaTokenizer"/>
+/// <seealso cref="DebertaTokenizer"/>
 public sealed class DebertaEncoding
 {
     /// <summary>

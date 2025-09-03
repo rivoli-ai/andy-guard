@@ -1,6 +1,6 @@
 using System;
 
-namespace Andy.Guard.Scanner;
+namespace Andy.Guard.InputScanners;
 
 public class ScanResult
 {

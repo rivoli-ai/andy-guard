@@ -1,6 +1,6 @@
 using Microsoft.ML.Tokenizers;
 
-namespace Andy.Guard.Tokenizer.Deberta;
+namespace Andy.Guard.Tokenizers.Deberta;
 
 /// <summary>
 /// DeBERTa tokenizer that mirrors Hugging Face preprocessing using SentencePiece.

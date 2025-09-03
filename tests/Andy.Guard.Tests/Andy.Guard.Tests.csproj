@@ -24,4 +24,8 @@
     <ProjectReference Include="../../src/Andy.Guard/Andy.Guard.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Scanner/" />
+  </ItemGroup>
+
 </Project>

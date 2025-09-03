@@ -1,4 +1,4 @@
-namespace Andy.Guard.Tokenizer;
+namespace Andy.Guard.Tokenizers.Deberta;
 
 /// <summary>
 /// Truncation strategy used when encoded sequences exceed the maximum length.
