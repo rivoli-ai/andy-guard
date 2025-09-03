@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Andy.Guard\Andy.Guard.csproj" />
+    <ProjectReference Include="../../src/Andy.Guard/Andy.Guard.Api.csproj" />
   </ItemGroup>
 
 </Project>
