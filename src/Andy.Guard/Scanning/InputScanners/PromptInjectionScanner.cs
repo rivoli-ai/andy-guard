@@ -186,10 +186,12 @@ public class PromptInjectionScanner : IInputScanner
 
         // ONNX models typically expect Int64 tensors for BERT-family inputs
         var idsLong = new long[enc.InputIds.Length];
-        for (int i = 0; i < enc.InputIds.Length; i++) idsLong[i] = enc.InputIds[i];
+        for (int i = 0; i < enc.InputIds.Length; i++)
+            idsLong[i] = enc.InputIds[i];
 
         var maskLong = new long[enc.AttentionMask.Length];
-        for (int i = 0; i < enc.AttentionMask.Length; i++) maskLong[i] = enc.AttentionMask[i];
+        for (int i = 0; i < enc.AttentionMask.Length; i++)
+            maskLong[i] = enc.AttentionMask[i];
 
         var shape = new int[] { 1, enc.SequenceLength };
         var idsTensor = new DenseTensor<long>(idsLong, shape);

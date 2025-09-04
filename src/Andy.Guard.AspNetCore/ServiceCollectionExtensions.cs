@@ -37,7 +37,7 @@ public static class ServiceCollectionExtensions
         services.AddOptions<ModelOutputScanningOptions>();
         // Add other output scanners here
         // e.g., services.AddSingleton<IOutputScanner, ToxicityScanner>();
-        
+
         // Generic registry for output scanners
         services.AddSingleton<IOutputScannerRegistry, OutputScannerRegistry>();
 
