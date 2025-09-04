@@ -1,26 +1,12 @@
 using Andy.Guard.Api.Models;
-using Andy.Guard.Scanning.Abstractions;
-using Microsoft.AspNetCore.Mvc;
+using Andy.Guard.Scanning;
 
-namespace Andy.Guard.Api.Controllers;
+namespace Andy.Guard.Api.Infrastructure;
 
-[ApiController]
-[Route("api/[controller]")]
-public sealed class ScanController : ControllerBase
+internal static class ScanResponseMapper
 {
-    [HttpPost]
-    public async Task<ActionResult<ScanResponse>> Post(
-        [FromBody] ScanRequest request,
-        [FromServices] IScannerRegistry registry)
+    public static ScanResponse FromResults(string scannedText, IReadOnlyDictionary<string, ScanResult> results)
     {
-        var text = request.EffectiveText;
-        if (string.IsNullOrWhiteSpace(text))
-            return BadRequest("text is required");
-
-        // Run requested scanners or all registered
-        var results = await registry.ScanAsync(request.Target, text, request.Scanners);
-
-        // Map results to findings
         var findings = new List<Finding>();
         bool anyDetected = false;
         float maxScore = 0f;
@@ -33,47 +19,46 @@ public sealed class ScanController : ControllerBase
             var name = kv.Key;
             var scan = kv.Value;
 
-            anyDetected |= scan.IsInjectionDetected;
+            anyDetected |= scan.IsThreatDetected;
             maxScore = Math.Max(maxScore, scan.ConfidenceScore);
             totalMs += (long)scan.ProcessingTime.TotalMilliseconds;
 
             if (scan.Metadata is not null)
-                mergedMeta = (mergedMeta ?? new());
+            {
+                mergedMeta ??= new();
+            }
 
-            // Simple severity mapping without requiring RiskLevel type
-            var sev = scan.IsInjectionDetected
+            var sev = scan.IsThreatDetected
                 ? (scan.ConfidenceScore >= 0.85f ? Severity.High : scan.ConfidenceScore >= 0.6f ? Severity.Medium : Severity.Low)
                 : Severity.Info;
             if ((int)sev > (int)highestSeverity)
                 highestSeverity = sev;
 
-            var finding = new Finding
+            findings.Add(new Finding
             {
                 Scanner = name,
-                Code = scan.IsInjectionDetected ? "DETECTED" : "CLEAR",
-                Message = scan.IsInjectionDetected ? "Indicators detected." : "No indicators detected.",
+                Code = scan.IsThreatDetected ? "DETECTED" : "CLEAR",
+                Message = scan.IsThreatDetected ? "Indicators detected." : "No indicators detected.",
                 Severity = sev,
                 Confidence = scan.ConfidenceScore,
                 Metadata = scan.Metadata
-            };
-            findings.Add(finding);
+            });
         }
 
         var decision = anyDetected
             ? (highestSeverity >= Severity.Medium ? Decision.Block : Decision.Review)
             : Decision.Allow;
 
-        var resp = new ScanResponse
+        return new ScanResponse
         {
             Decision = decision,
             Score = maxScore,
             HighestSeverity = highestSeverity,
             Findings = findings,
             Metadata = mergedMeta,
-            OriginalLength = text.Length,
+            OriginalLength = scannedText?.Length ?? 0,
             ProcessingMs = totalMs
         };
-
-        return Ok(resp);
     }
 }
+
