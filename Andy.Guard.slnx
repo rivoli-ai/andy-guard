@@ -5,7 +5,7 @@
     <Project Path="src/Andy.Guard.AspNetCore/Andy.Guard.AspNetCore.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="/tests/andy-guard/tests/Andy.Guard.Tests/Andy.Guard.Tests.csproj" />
-    <Project Path="/tests/andy-guard/tests/Andy.Guard.Api.Tests/Andy.Guard.Api.Tests.csproj" />
+    <Project Path="tests/andy-guard/tests/Andy.Guard.Tests/Andy.Guard.Tests.csproj" />
+    <Project Path="tests/andy-guard/tests/Andy.Guard.Api.Tests/Andy.Guard.Api.Tests.csproj" />
   </Folder>
 </Solution>
