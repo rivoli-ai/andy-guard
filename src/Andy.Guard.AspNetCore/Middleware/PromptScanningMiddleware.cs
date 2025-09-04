@@ -67,7 +67,8 @@ public sealed class PromptScanningMiddleware
 
     private static bool IsJsonWithBody(HttpRequest request)
     {
-        if (request.ContentLength is null or <= 0) return false;
+        if (request.ContentLength is null or <= 0)
+            return false;
         var contentType = request.ContentType ?? string.Empty;
         return contentType.Contains("application/json", StringComparison.OrdinalIgnoreCase);
     }

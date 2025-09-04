@@ -147,7 +147,8 @@ public sealed class DebertaTokenizer : IDisposable
     /// </remarks>
     public DebertaEncoding Encode(string text)
     {
-        if (text == null) text = string.Empty;
+        if (text == null)
+            text = string.Empty;
 
         // 1) SentencePiece subword IDs for the raw text (no lowercasing; DeBERTa v3 is cased)
         var ids = _sp.EncodeToIds(text).ToList();
@@ -179,8 +180,10 @@ public sealed class DebertaTokenizer : IDisposable
     /// </remarks>
     public DebertaEncoding Encode(string textA, string textB)
     {
-        if (textA == null) textA = string.Empty;
-        if (textB == null) textB = string.Empty;
+        if (textA == null)
+            textA = string.Empty;
+        if (textB == null)
+            textB = string.Empty;
 
         var a = _sp.EncodeToIds(textA).ToList();
         var b = _sp.EncodeToIds(textB).ToList();
@@ -207,7 +210,8 @@ public sealed class DebertaTokenizer : IDisposable
 
     private List<int> TruncateSingle(List<int> tokens)
     {
-        if (tokens.Count <= _maxLen) return tokens;
+        if (tokens.Count <= _maxLen)
+            return tokens;
         // Keep the first _maxLen tokens (HF default behavior for single sequence is usually simple head truncation)
         return tokens.Take(_maxLen).ToList();
     }
@@ -233,8 +237,10 @@ public sealed class DebertaTokenizer : IDisposable
             case TruncationStrategy.LongestFirst:
                 while (aa.Count + bb.Count > maxContent)
                 {
-                    if (aa.Count >= bb.Count) aa.RemoveAt(aa.Count - 1);
-                    else bb.RemoveAt(bb.Count - 1);
+                    if (aa.Count >= bb.Count)
+                        aa.RemoveAt(aa.Count - 1);
+                    else
+                        bb.RemoveAt(bb.Count - 1);
                 }
                 break;
 

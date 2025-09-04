@@ -44,7 +44,8 @@ public sealed class ScanController : ControllerBase
             var sev = scan.IsInjectionDetected
                 ? (scan.ConfidenceScore >= 0.85f ? Severity.High : scan.ConfidenceScore >= 0.6f ? Severity.Medium : Severity.Low)
                 : Severity.Info;
-            if ((int)sev > (int)highestSeverity) highestSeverity = sev;
+            if ((int)sev > (int)highestSeverity)
+                highestSeverity = sev;
 
             var finding = new Finding
             {

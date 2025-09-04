@@ -1,0 +1,47 @@
+# Normalize line endings and mark binaries
+
+# Auto-detect text files and normalize line endings to LF in the repo
+* text=auto
+
+# Prefer LF across platforms for source and config
+*.cs      text eol=lf
+*.csproj  text eol=lf
+*.props   text eol=lf
+*.targets text eol=lf
+*.sln     text eol=lf
+*.json    text eol=lf
+*.yml     text eol=lf
+*.yaml    text eol=lf
+*.md      text eol=lf
+*.sh      text eol=lf
+.editorconfig text eol=lf
+
+# Windows-centric scripts use CRLF
+*.bat     text eol=crlf
+*.cmd     text eol=crlf
+*.ps1     text eol=crlf
+
+# Binary files (do not modify line endings)
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.zip  binary
+*.gz   binary
+*.7z   binary
+*.mp3  binary
+*.mp4  binary
+*.mov  binary
+*.wav  binary
+*.woff binary
+*.woff2 binary
+*.ttf  binary
+*.eot  binary
+*.otf  binary
+*.dll  binary
+*.exe  binary
+*.pdb  binary
+*.nupkg binary
+
