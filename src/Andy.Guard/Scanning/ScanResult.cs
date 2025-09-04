@@ -1,10 +1,8 @@
-using System;
-
-namespace Andy.Guard.InputScanners;
+namespace Andy.Guard.Scanning;
 
 public class ScanResult
 {
-    public bool IsInjectionDetected { get; set; }
+    public bool IsThreatDetected { get; set; }
     public float ConfidenceScore { get; set; }
     public RiskLevel RiskLevel { get; set; }
     public Dictionary<string, object>? Metadata { get; set; }
