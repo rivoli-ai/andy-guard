@@ -1,6 +1,5 @@
 using System.Net.Http.Json;
 using System.Text.Json;
-using Andy.Guard.Api;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Andy.Guard.Api.Tests;
@@ -27,7 +26,7 @@ public class ScanEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 
         Assert.True(root.TryGetProperty("decision", out _));
         Assert.True(root.TryGetProperty("score", out _));
-        Assert.True(root.TryGetProperty("risk", out _));
+        Assert.True(root.TryGetProperty("highestSeverity", out _));
         Assert.True(root.TryGetProperty("findings", out _));
     }
 

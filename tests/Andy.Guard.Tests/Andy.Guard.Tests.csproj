@@ -24,8 +24,4 @@
     <ProjectReference Include="../../src/Andy.Guard/Andy.Guard.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Scanner/" />
-  </ItemGroup>
-
 </Project>

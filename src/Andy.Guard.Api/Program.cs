@@ -1,8 +1,5 @@
-using Andy.Guard.Api.Middleware;
-using Andy.Guard.InputScanners.Abstractions;
-using Andy.Guard.InputScanners;
-using Andy.Guard.Api.Services.Abstractions;
-using Andy.Guard.Api.Services;
+using Andy.Guard.AspNetCore;
+using Andy.Guard.AspNetCore.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,11 +9,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Register the library scanner (currently stubbed)
-builder.Services.AddSingleton<IPromptInjectionScanner, PromptInjectionScanner>();
-// Register generic scanner adapter(s) and registry
-builder.Services.AddSingleton<ITextScanner, PromptInjectionTextScanner>();
-builder.Services.AddSingleton<IScannerRegistry, ScannerRegistry>();
+// Register default Guard scanners and registry
+builder.Services.AddGuardScanning();
 
 var app = builder.Build();
 
@@ -29,7 +23,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Scan incoming JSON requests that carry a top-level "prompt"
+// Scan incoming JSON requests that carry a top-level "prompt" or "text"
 app.UsePromptScanning();
 
 app.MapControllers();

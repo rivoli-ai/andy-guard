@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Andy.Guard/Andy.Guard.csproj" />
+    <ProjectReference Include="../Andy.Guard.AspNetCore/Andy.Guard.AspNetCore.csproj" />
   </ItemGroup>
 
 </Project>

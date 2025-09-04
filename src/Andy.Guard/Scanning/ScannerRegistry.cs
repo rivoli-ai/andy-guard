@@ -1,12 +1,13 @@
-using Andy.Guard.Api.Services.Abstractions;
 using Andy.Guard.InputScanners;
+using Andy.Guard.Scanning;
+using Andy.Guard.Scanning.Abstractions;
 
-namespace Andy.Guard.Api.Services;
+namespace Andy.Guard.Scanning;
 
 /// <summary>
 /// Default registry that discovers <see cref="ITextScanner"/> via DI and runs selected scanners.
 /// </summary>
-internal sealed class ScannerRegistry : IScannerRegistry
+public sealed class ScannerRegistry : IScannerRegistry
 {
     private readonly IReadOnlyDictionary<string, ITextScanner> _scanners;
 
@@ -18,7 +19,7 @@ internal sealed class ScannerRegistry : IScannerRegistry
     public IReadOnlyCollection<string> RegisteredScanners => _scanners.Keys.ToArray();
 
     public async Task<IReadOnlyDictionary<string, ScanResult>> ScanAsync(
-        Models.ScanTarget target,
+        ScanTarget target,
         string text,
         IEnumerable<string>? scanners = null,
         ScanOptions? options = null)
@@ -40,4 +41,3 @@ internal sealed class ScannerRegistry : IScannerRegistry
         return result;
     }
 }
-

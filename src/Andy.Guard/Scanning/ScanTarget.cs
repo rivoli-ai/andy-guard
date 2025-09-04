@@ -1,4 +1,4 @@
-namespace Andy.Guard.Api.Models;
+namespace Andy.Guard.Scanning;
 
 /// <summary>
 /// Indicates whether we scan a user input before the LLM or an LLM output.

@@ -1,6 +1,7 @@
 using Andy.Guard.InputScanners;
+using Andy.Guard.Scanning;
 
-namespace Andy.Guard.Api.Services.Abstractions;
+namespace Andy.Guard.Scanning.Abstractions;
 
 /// <summary>
 /// Generic text scanner abstraction capable of scanning input or output text.
@@ -16,11 +17,10 @@ public interface ITextScanner
     /// <summary>
     /// Whether the scanner supports the given target (input/output).
     /// </summary>
-    bool SupportsTarget(Models.ScanTarget target) => true;
+    bool SupportsTarget(ScanTarget target) => true;
 
     /// <summary>
     /// Runs the scan for the given target and text.
     /// </summary>
-    Task<ScanResult> ScanAsync(Models.ScanTarget target, string text, ScanOptions? options = null);
+    Task<ScanResult> ScanAsync(ScanTarget target, string text, ScanOptions? options = null);
 }
-

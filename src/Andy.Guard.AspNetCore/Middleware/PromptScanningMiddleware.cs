@@ -1,14 +1,14 @@
 using System.Text.Json;
-using Microsoft.AspNetCore.Builder;
 using Andy.Guard.InputScanners;
 using Andy.Guard.InputScanners.Abstractions;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 
-namespace Andy.Guard.Api.Middleware;
+namespace Andy.Guard.AspNetCore.Middleware;
 
 /// <summary>
 /// Middleware that scans incoming JSON requests for prompt injections.
-/// Looks for a top-level "prompt" string field and invokes the scanner.
+/// Looks for a top-level "text" or "prompt" string field and invokes the scanner.
 /// Adds basic scan details to <see cref="HttpContext.Items"/> and response headers.
 /// </summary>
 public sealed class PromptScanningMiddleware
@@ -78,3 +78,4 @@ public static class PromptScanningMiddlewareExtensions
     public static IApplicationBuilder UsePromptScanning(this IApplicationBuilder app)
         => app.UseMiddleware<PromptScanningMiddleware>();
 }
+

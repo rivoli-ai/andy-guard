@@ -1,6 +1,7 @@
 using Andy.Guard.InputScanners;
+using Andy.Guard.Scanning;
 
-namespace Andy.Guard.Api.Services.Abstractions;
+namespace Andy.Guard.Scanning.Abstractions;
 
 /// <summary>
 /// Aggregates available scanners and orchestrates running one or more by name.
@@ -16,9 +17,8 @@ public interface IScannerRegistry
     /// Scans text with the specified scanners; when null/empty, runs all available scanners.
     /// </summary>
     Task<IReadOnlyDictionary<string, ScanResult>> ScanAsync(
-        Models.ScanTarget target,
+        ScanTarget target,
         string text,
         IEnumerable<string>? scanners = null,
         ScanOptions? options = null);
 }
-

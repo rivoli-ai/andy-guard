@@ -1,9 +1,11 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/Andy.Guard.Api/Andy.Guard.Api.csproj" />
     <Project Path="src/Andy.Guard/Andy.Guard.csproj" />
+    <Project Path="src/Andy.Guard.Api/Andy.Guard.Api.csproj" />
+    <Project Path="src/Andy.Guard.AspNetCore/Andy.Guard.AspNetCore.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="/Users/Thomas_1/Sites/andy-guard/tests/Andy.Guard.Tests/Andy.Guard.Tests.csproj" />
+    <Project Path="/Users/Thomas_1/Sites/andy-guard/tests/Andy.Guard.Api.Tests/Andy.Guard.Api.Tests.csproj" />
   </Folder>
 </Solution>

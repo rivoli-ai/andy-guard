@@ -1,14 +1,14 @@
-using Andy.Guard.Api.Models;
-using Andy.Guard.Api.Services.Abstractions;
 using Andy.Guard.InputScanners;
 using Andy.Guard.InputScanners.Abstractions;
+using Andy.Guard.Scanning;
+using Andy.Guard.Scanning.Abstractions;
 
-namespace Andy.Guard.Api.Services;
+namespace Andy.Guard.Scanning;
 
 /// <summary>
 /// Adapter that exposes the library's <see cref="IPromptInjectionScanner"/> as a generic <see cref="ITextScanner"/>.
 /// </summary>
-internal sealed class PromptInjectionTextScanner : ITextScanner
+public sealed class PromptInjectionTextScanner : ITextScanner
 {
     private readonly IPromptInjectionScanner _scanner;
 
@@ -28,4 +28,3 @@ internal sealed class PromptInjectionTextScanner : ITextScanner
             : await _scanner.ScanOutputAsync(text, options);
     }
 }
-
