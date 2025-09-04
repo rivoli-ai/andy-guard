@@ -63,7 +63,7 @@ csharp_preserve_single_line_statements = false
 csharp_preserve_single_line_blocks = true
 
 # Code style rules
-csharp_prefer_braces = true:warning
+csharp_prefer_braces = true:none
 csharp_prefer_simple_using_statement = true:suggestion
 csharp_prefer_simple_default_expression = true:suggestion
 csharp_style_prefer_index_operator = true:suggestion
@@ -148,6 +148,13 @@ dotnet_naming_style.begins_with_i.word_separator =
 dotnet_naming_style.begins_with_i.capitalization = pascal_case
 
 # JSON files
+
+# CS1591: Missing XML comment for publicly visible type or member
+dotnet_diagnostic.CS1591.severity = none
+
+# IDE0011: Add braces
+dotnet_diagnostic.IDE0011.severity = none
+
 [*.json]
 indent_size = 2
 
