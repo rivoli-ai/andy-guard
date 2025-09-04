@@ -1,3 +1,6 @@
+using Andy.Guard.AspNetCore;
+using Andy.Guard.AspNetCore.Middleware;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -5,6 +8,9 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Register default Guard scanners and registry
+builder.Services.AddGuardScanning();
 
 var app = builder.Build();
 
@@ -16,6 +22,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Scan incoming JSON requests that carry a top-level "prompt" or "text"
+app.UsePromptScanning();
 
 app.MapControllers();
 
@@ -45,3 +54,6 @@ record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
+
+// Expose Program for WebApplicationFactory in integration tests
+namespace Andy.Guard.Api { public partial class Program { } }
