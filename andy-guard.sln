@@ -6,15 +6,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andy.Guard.Api.Tests", "tests\Andy.Guard.Api.Tests\Andy.Guard.Api.Tests.csproj", "{378D376E-5CB0-6877-699F-DA53718A553D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andy.Guard.Api.Tests", "\Users\Thomas_1\Sites\andy-guard\tests\Andy.Guard.Api.Tests\Andy.Guard.Api.Tests.csproj", "{378D376E-5CB0-6877-699F-DA53718A553D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andy.Guard.Tests", "tests\Andy.Guard.Tests\Andy.Guard.Tests.csproj", "{181D40F0-46EB-1B00-1746-9CCE15BC93AD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andy.Guard.Tests", "\Users\Thomas_1\Sites\andy-guard\tests\Andy.Guard.Tests\Andy.Guard.Tests.csproj", "{181D40F0-46EB-1B00-1746-9CCE15BC93AD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andy.Guard", "src\Andy.Guard\Andy.Guard.csproj", "{1331B72F-594D-A12D-2532-5B33D13047E4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andy.Guard", "\Users\Thomas_1\Sites\andy-guard\src\Andy.Guard\Andy.Guard.csproj", "{1331B72F-594D-A12D-2532-5B33D13047E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andy.Guard.AspNetCore", "src\Andy.Guard.AspNetCore\Andy.Guard.AspNetCore.csproj", "{FA9F9BFC-7B8F-365F-57EA-280DBF8580A4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andy.Guard.AspNetCore", "\Users\Thomas_1\Sites\andy-guard\src\Andy.Guard.AspNetCore\Andy.Guard.AspNetCore.csproj", "{FA9F9BFC-7B8F-365F-57EA-280DBF8580A4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andy.Guard.Api", "src\Andy.Guard.Api\Andy.Guard.Api.csproj", "{48995824-D7E0-AF08-81F1-8A142491E69B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andy.Guard.Api", "\Users\Thomas_1\Sites\andy-guard\src\Andy.Guard.Api\Andy.Guard.Api.csproj", "{48995824-D7E0-AF08-81F1-8A142491E69B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -54,6 +54,6 @@ Global
 		{48995824-D7E0-AF08-81F1-8A142491E69B} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {03D59D1E-CA5F-4E2D-814F-52F171E1F984}
+		SolutionGuid = {0D7275D1-DBBD-4C17-8B6B-69D3FF372BD9}
 	EndGlobalSection
 EndGlobal

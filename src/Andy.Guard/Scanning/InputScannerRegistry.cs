@@ -1,17 +1,15 @@
-using Andy.Guard.InputScanners;
-using Andy.Guard.Scanning;
 using Andy.Guard.Scanning.Abstractions;
 
 namespace Andy.Guard.Scanning;
 
 /// <summary>
-/// Default registry that discovers <see cref="ITextScanner"/> via DI and runs selected scanners.
+/// Default registry that discovers <see cref="IInputScanner"/> via DI and runs selected scanners.
 /// </summary>
-public sealed class ScannerRegistry : IScannerRegistry
+public sealed class InputScannerRegistry : IInputScannerRegistry
 {
-    private readonly IReadOnlyDictionary<string, ITextScanner> _scanners;
+    private readonly IReadOnlyDictionary<string, IInputScanner> _scanners;
 
-    public ScannerRegistry(IEnumerable<ITextScanner> scanners)
+    public InputScannerRegistry(IEnumerable<IInputScanner> scanners)
     {
         _scanners = scanners.ToDictionary(s => s.Name, s => s, StringComparer.OrdinalIgnoreCase);
     }
@@ -19,22 +17,18 @@ public sealed class ScannerRegistry : IScannerRegistry
     public IReadOnlyCollection<string> RegisteredScanners => _scanners.Keys.ToArray();
 
     public async Task<IReadOnlyDictionary<string, ScanResult>> ScanAsync(
-        ScanTarget target,
-        string text,
+        string prompt,
         IEnumerable<string>? scanners = null,
         ScanOptions? options = null)
     {
         var selected = (scanners is null || !scanners.Any())
             ? _scanners.Values
-            : scanners.Where(name => _scanners.ContainsKey(name)).Select(name => _scanners[name]);
+            : scanners.Where(_scanners.ContainsKey).Select(name => _scanners[name]);
 
         var result = new Dictionary<string, ScanResult>(StringComparer.OrdinalIgnoreCase);
         foreach (var scanner in selected)
         {
-            if (!scanner.SupportsTarget(target))
-                continue;
-
-            var scan = await scanner.ScanAsync(target, text, options);
+            var scan = await scanner.ScanAsync(prompt, options);
             result[scanner.Name] = scan;
         }
 

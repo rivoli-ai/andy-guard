@@ -1,6 +1,4 @@
-using System;
-
-namespace Andy.Guard.InputScanners;
+namespace Andy.Guard.Scanning;
 
 public class ScanOptions
 {

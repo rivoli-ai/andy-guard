@@ -1,12 +1,9 @@
-using Andy.Guard.InputScanners;
-using Andy.Guard.Scanning;
-
 namespace Andy.Guard.Scanning.Abstractions;
 
 /// <summary>
 /// Aggregates available scanners and orchestrates running one or more by name.
 /// </summary>
-public interface IScannerRegistry
+public interface IInputScannerRegistry
 {
     /// <summary>
     /// Returns the registered scanner names.
@@ -14,11 +11,10 @@ public interface IScannerRegistry
     IReadOnlyCollection<string> RegisteredScanners { get; }
 
     /// <summary>
-    /// Scans text with the specified scanners; when null/empty, runs all available scanners.
+    /// Scans prompt with the specified input scanners; when null/empty, runs all available scanners.
     /// </summary>
     Task<IReadOnlyDictionary<string, ScanResult>> ScanAsync(
-        ScanTarget target,
-        string text,
+        string prompt,
         IEnumerable<string>? scanners = null,
         ScanOptions? options = null);
 }

@@ -18,11 +18,6 @@ public sealed class ScanRequest
     public string? Prompt { get; set; }
 
     /// <summary>
-    /// Whether this is input (pre-LLM) or output (post-LLM) scanning.
-    /// </summary>
-    public Andy.Guard.Scanning.ScanTarget Target { get; set; } = Andy.Guard.Scanning.ScanTarget.Input;
-
-    /// <summary>
     /// Optional list of scanners to run (e.g., ["prompt_injection"]). Empty means defaults.
     /// </summary>
     public List<string>? Scanners { get; set; }
