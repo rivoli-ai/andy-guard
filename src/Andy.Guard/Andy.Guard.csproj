@@ -7,12 +7,25 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="/Users/Thomas_1/Sites/andy-guard/README.md" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.0-preview.25373.1" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.19.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Scanning/OutputScanners/" />
+    <Folder Include="Tokenizers/Deberta/onnx/" />
+  </ItemGroup>
+
+  <!-- Ensure the SentencePiece model is always copied to output as ./onnx/spm.model -->
+  <ItemGroup>
+    <None Update="Tokenizers/Deberta/onnx/spm.model">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <TargetPath>onnx/spm.model</TargetPath>
+    </None>
   </ItemGroup>
 
 </Project>
