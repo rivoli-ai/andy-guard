@@ -57,6 +57,7 @@ public class PromptInjectionScanner : IInputScanner
             _modelScore = (text) => modelScorer(_tokenizer.Encode(text));
         }
 
+
         // Self-contained ONNX runtime path (optional). If not provided, try to download from Hugging Face.
         var onnxPath = ResolveOnnxModelPath();
         if (!string.IsNullOrWhiteSpace(onnxPath) && File.Exists(onnxPath))

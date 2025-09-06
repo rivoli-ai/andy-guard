@@ -101,12 +101,11 @@ public sealed class DebertaTokenizer : IDisposable
         {
             spModelPath = Path.Combine(AppContext.BaseDirectory, "onnx", "spm.model");
         }
-
+        
         if (!File.Exists(spModelPath))
             throw new FileNotFoundException($"SentencePiece model not found: {spModelPath}");
 
         using var fs = File.OpenRead(spModelPath);
-        // Maintain parameter order consistency with FromStream signature
         return FromStream(fs, padId, clsId, sepId, unkId, maskId, maxLen, truncation);
     }
 
@@ -149,7 +148,6 @@ public sealed class DebertaTokenizer : IDisposable
                 ["[UNK]"] = unkId
             });
 
-        // Maintain parameter order consistency with constructor signature
         return new DebertaTokenizer(sp, padId, clsId, sepId, unkId, maskId, maxLen, truncation);
     }
 
