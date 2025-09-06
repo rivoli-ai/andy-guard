@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="/Users/Thomas_1/Sites/andy-guard/README.md" />
+    <None Remove="../../README.md" />
   </ItemGroup>
 
   <ItemGroup>
