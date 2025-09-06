@@ -57,8 +57,8 @@ public class PromptInjectionScanner : IInputScanner
             _modelScore = (text) => modelScorer(_tokenizer.Encode(text));
         }
 
-        // Self-contained ONNX runtime path (optional). Enabled if model path is provided via env.
-        var onnxPath = Environment.GetEnvironmentVariable("ANDY_GUARD_PI_ONNX_PATH");
+        // Self-contained ONNX runtime path (optional). If not provided, try to download from Hugging Face.
+        var onnxPath = ResolveOnnxModelPath();
         if (!string.IsNullOrWhiteSpace(onnxPath) && File.Exists(onnxPath))
         {
             try
@@ -254,6 +254,67 @@ public class PromptInjectionScanner : IInputScanner
         try
         {
             return DebertaTokenizer.FromFile(spmPath!, clsId, sepId, padId, maskId, unkId, maxLen);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Resolve a usable ONNX model path by checking env, then attempting a Hugging Face download.
+    /// Env vars:
+    /// - ANDY_GUARD_PI_ONNX_PATH: absolute/relative path to a local .onnx file
+    /// - ANDY_GUARD_PI_ONNX_HF_REPO: repo id (default: protectai/deberta-v3-base-prompt-injection-v2)
+    /// - ANDY_GUARD_PI_ONNX_HF_REVISION: branch/tag/commit (default: main)
+    /// - ANDY_GUARD_PI_ONNX_FILENAME: path inside the repo (default: onnx/model.onnx)
+    /// - ANDY_GUARD_PI_ONNX_LOCAL_PATH: where to place the downloaded file (default: ./onnx/model.onnx)
+    /// </summary>
+    private static string? ResolveOnnxModelPath()
+    {
+        // 1) If explicit path provided and exists, use it.
+        var explicitPath = Environment.GetEnvironmentVariable("ANDY_GUARD_PI_ONNX_PATH");
+        if (!string.IsNullOrWhiteSpace(explicitPath) && File.Exists(explicitPath))
+            return explicitPath;
+
+        // 2) Attempt download from Hugging Face if repo is specified (or use default).
+        var repo = Environment.GetEnvironmentVariable("ANDY_GUARD_PI_ONNX_HF_REPO");
+        if (string.IsNullOrWhiteSpace(repo))
+            repo = "protectai/deberta-v3-base-prompt-injection-v2";
+
+        var revision = Environment.GetEnvironmentVariable("ANDY_GUARD_PI_ONNX_HF_REVISION");
+        if (string.IsNullOrWhiteSpace(revision))
+            revision = "main";
+
+        var fileInRepo = Environment.GetEnvironmentVariable("ANDY_GUARD_PI_ONNX_FILENAME");
+        if (string.IsNullOrWhiteSpace(fileInRepo))
+            fileInRepo = "onnx/model.onnx";
+
+        // Default local target: app output folder ./onnx/model.onnx
+        var baseDir = AppContext.BaseDirectory;
+        var localDefault = Path.Combine(baseDir, "onnx", "model.onnx");
+        var localTarget = Environment.GetEnvironmentVariable("ANDY_GUARD_PI_ONNX_LOCAL_PATH");
+        if (string.IsNullOrWhiteSpace(localTarget))
+            localTarget = localDefault;
+
+        // If already downloaded, use it
+        if (File.Exists(localTarget))
+            return localTarget;
+
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(localTarget)!);
+            var url = $"https://huggingface.co/{repo}/resolve/{revision}/{fileInRepo}?download=true";
+
+            using var http = new HttpClient();
+            using var resp = http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
+            if (!resp.IsSuccessStatusCode)
+                return null;
+
+            using var src = resp.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
+            using var dst = File.Create(localTarget);
+            src.CopyTo(dst);
+            return localTarget;
         }
         catch
         {

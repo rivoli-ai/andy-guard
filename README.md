@@ -144,7 +144,6 @@ print(t.cls_token_id, t.sep_token_id, t.pad_token_id, t.mask_token_id, t.unk_tok
 
 Included assets (for development and tests):
 - `src/Andy.Guard/Tokenizers/Deberta/onnx/spm.model` (copied to output as `./onnx/spm.model`)
-- `src/Andy.Guard/Tokenizers/Deberta/onnx/model.onnx` (copied to output as `./onnx/model.onnx`)
 - `src/Andy.Guard/Tokenizers/Deberta/onnx/tokenizer.json`, `config.json`
 
 To enable tokenizer/inference in the prompt‑injection scanner, set environment variables:
@@ -153,9 +152,17 @@ To enable tokenizer/inference in the prompt‑injection scanner, set environment
 - `ANDY_GUARD_DEBERTA_MAX_LEN`: Max sequence length (default `512`).
 - `ANDY_GUARD_DEBERTA_CLS_ID`, `ANDY_GUARD_DEBERTA_SEP_ID`, `ANDY_GUARD_DEBERTA_PAD_ID`, `ANDY_GUARD_DEBERTA_MASK_ID`, `ANDY_GUARD_DEBERTA_UNK_ID`.
 - `ANDY_GUARD_PI_THRESHOLD`: Probability threshold for detection (default `0.5`).
-- `ANDY_GUARD_PI_ONNX_PATH`: Path to DeBERTa ONNX model (optional for inference). If not set, the scanner uses heuristics.
+- `ANDY_GUARD_PI_ONNX_PATH`: Path to DeBERTa ONNX model (optional). If not set, the scanner either uses heuristics or will try to download from Hugging Face (see below).
 
-Note: Both `spm.model` and `model.onnx` are copied to the build output by default. To enable ONNX inference, set `ANDY_GUARD_PI_ONNX_PATH` to `./onnx/model.onnx` (or an absolute path).
+Model download from Hugging Face:
+- By default, if `ANDY_GUARD_PI_ONNX_PATH` is not set, the scanner will attempt to fetch `onnx/model.onnx` from `protectai/deberta-v3-base-prompt-injection-v2` on Hugging Face and store it at `./onnx/model.onnx` at runtime.
+- You can customize this via:
+  - `ANDY_GUARD_PI_ONNX_HF_REPO` (default `protectai/deberta-v3-base-prompt-injection-v2`)
+  - `ANDY_GUARD_PI_ONNX_HF_REVISION` (default `main`)
+  - `ANDY_GUARD_PI_ONNX_FILENAME` (default `onnx/model.onnx`)
+  - `ANDY_GUARD_PI_ONNX_LOCAL_PATH` (default `./onnx/model.onnx` under the app base directory)
+
+Note: Only `spm.model` is shipped in the repo to avoid large binaries. The ONNX model is downloaded on‑demand or can be provided via a local path.
 
 ## Development
 
