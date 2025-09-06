@@ -44,4 +44,4 @@
 *.exe  binary
 *.pdb  binary
 *.nupkg binary
-
+*.onnx binary
