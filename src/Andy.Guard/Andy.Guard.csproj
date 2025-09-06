@@ -26,6 +26,11 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>onnx/spm.model</TargetPath>
     </None>
+    <!-- Also copy the ONNX model to output as ./onnx/model.onnx for easy runtime loading -->
+    <None Update="Tokenizers/Deberta/onnx/model.onnx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>onnx/model.onnx</TargetPath>
+    </None>
   </ItemGroup>
 
 </Project>

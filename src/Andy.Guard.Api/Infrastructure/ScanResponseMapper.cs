@@ -26,6 +26,12 @@ internal static class ScanResponseMapper
             if (scan.Metadata is not null)
             {
                 mergedMeta ??= new();
+                if (!mergedMeta.TryGetValue("scanners", out var scannersObj) || scannersObj is not Dictionary<string, object> scannersDict)
+                {
+                    scannersDict = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+                    mergedMeta["scanners"] = scannersDict;
+                }
+                scannersDict[name] = scan.Metadata;
             }
 
             var sev = scan.IsThreatDetected
@@ -61,4 +67,3 @@ internal static class ScanResponseMapper
         };
     }
 }
-
