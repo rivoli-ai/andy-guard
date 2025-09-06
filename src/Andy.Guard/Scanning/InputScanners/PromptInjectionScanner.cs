@@ -12,17 +12,17 @@ namespace Andy.Guard.InputScanners;
 ///
 /// Uses <see cref="DebertaTokenizer"/> for fast, HuggingFace-compatible preprocessing when configured
 /// and falls back to a lightweight heuristic scorer otherwise. This design mirrors Protect AI's
-/// prompt_injection LLM Guard approach: tokenize → classify → threshold.
-///
-/// Configuration is read from environment variables to avoid hardcoding model specifics:
-/// - <c>ANDY_GUARD_DEBERTA_SPM_PATH</c>: Path to the SentencePiece <c>spm.model</c>
-/// - <c>ANDY_GUARD_DEBERTA_MAX_LEN</c>: Max sequence length (default 512)
-/// - <c>ANDY_GUARD_DEBERTA_CLS_ID</c>, <c>..._SEP_ID</c>, <c>..._PAD_ID</c>, <c>..._MASK_ID</c>, <c>..._UNK_ID</c>
-/// - <c>ANDY_GUARD_PI_THRESHOLD</c>: Probability threshold (default 0.5)
-///
-/// If the tokenizer can be created (env configured), encodings are produced and included in metadata.
+/// prompt_injection LLM Guard approach: tokenize → classify → threshold. This scanners default to the model: protectai/deberta-v3-base-prompt-injection-v2.
+/// <br></br>
+/// <br>Configuration is read from environment variables to avoid hardcoding model specifics:</br>
+/// <br>- <c>ANDY_GUARD_DEBERTA_SPM_PATH</c>: Path to the SentencePiece <c>spm.model</c></br>
+/// <br>- <c>ANDY_GUARD_DEBERTA_MAX_LEN</c>: Max sequence length (default 512)</br>
+/// <br>- <c>ANDY_GUARD_DEBERTA_CLS_ID</c>, <c>..._SEP_ID</c>, <c>..._PAD_ID</c>, <c>..._MASK_ID</c>, <c>..._UNK_ID</c></br>
+/// <br>- <c>ANDY_GUARD_PI_THRESHOLD</c>: Probability threshold (default 0.5)</br>
+/// <br></br>
+/// <br>If the tokenizer can be created (env configured), encodings are produced and included in metadata.
 /// Actual model inference can be plugged in via constructor injection of a scorer; otherwise a
-/// high-recall heuristic is used to preserve behavior without external dependencies.
+/// high-recall heuristic is used to preserve behavior without external dependencies.</br>
 /// </summary>
 public class PromptInjectionScanner : IInputScanner
 {
