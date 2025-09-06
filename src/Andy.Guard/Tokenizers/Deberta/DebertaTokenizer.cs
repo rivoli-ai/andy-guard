@@ -101,7 +101,7 @@ public sealed class DebertaTokenizer : IDisposable
         {
             spModelPath = Path.Combine(AppContext.BaseDirectory, "onnx", "spm.model");
         }
-        
+
         if (!File.Exists(spModelPath))
             throw new FileNotFoundException($"SentencePiece model not found: {spModelPath}");
 
