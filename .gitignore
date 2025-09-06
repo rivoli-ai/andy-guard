@@ -73,3 +73,7 @@ container/rootfs-safe/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Large model binaries (keep out of git)
+src/Andy.Guard/Tokenizers/Deberta/onnx/model.onnx
+*.onnx
