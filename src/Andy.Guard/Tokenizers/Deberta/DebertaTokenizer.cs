@@ -27,11 +27,11 @@ namespace Andy.Guard.Tokenizers.Deberta;
 ///   <item><description>Pads to <c>_maxLen</c> and creates the attention mask.</description></item>
 /// </list>
 ///
-/// <para>Note: Use the exact special-token IDs for your checkpoint (e.g., <c>microsoft/deberta-v3-base</c>). These IDs are not stored in the <c>spm.model</c>.</para>
+/// <para>Note: Use the exact special-token IDs for your checkpoint (e.g., <c>microsoft/deberta-v3-base</c>). These IDs may not be stored in the <c>spm.model</c>.</para>
 /// <para>The special-token IDs must match the model’s embedding matrix indices. Retrieve them once using Hugging Face transformers:</para>
 /// <code>
 /// from transformers import AutoTokenizer
-/// t = AutoTokenizer.from_pretrained("microsoft/deberta-v3-base")
+/// t = AutoTokenizer.from_pretrained("microsoft/deberta-v3-base") //
 /// print(t.cls_token_id, t.sep_token_id, t.pad_token_id, t.mask_token_id, t.unk_token_id)
 /// </code>
 /// </remarks>
@@ -51,7 +51,11 @@ public sealed class DebertaTokenizer : IDisposable
 
     private DebertaTokenizer(
         SentencePieceTokenizer sp,
-        int clsId, int sepId, int padId, int maskId, int unkId,
+        int padId,
+        int clsId,
+        int sepId,
+        int unkId,
+        int maskId,
         int maxLen,
         TruncationStrategy truncation)
     {
@@ -69,11 +73,11 @@ public sealed class DebertaTokenizer : IDisposable
     /// Creates a tokenizer from a SentencePiece <c>spm.model</c> file path.
     /// </summary>
     /// <param name="spModelPath">Path to the SentencePiece <c>spm.model</c> file.</param>
+    /// <param name="padId">ID of <c>[PAD]</c>.</param>
     /// <param name="clsId">ID of <c>[CLS]</c>.</param>
     /// <param name="sepId">ID of <c>[SEP]</c>.</param>
-    /// <param name="padId">ID of <c>[PAD]</c>.</param>
-    /// <param name="maskId">ID of <c>[MASK]</c>.</param>
     /// <param name="unkId">ID of <c>[UNK]</c>.</param>
+    /// <param name="maskId">ID of <c>[MASK]</c>.</param>
     /// <param name="maxLen">Maximum sequence length (includes specials and padding).</param>
     /// <param name="truncation">Truncation strategy for pairs and singles.</param>
     /// <returns>Configured <see cref="DebertaTokenizer"/> instance.</returns>
@@ -83,27 +87,37 @@ public sealed class DebertaTokenizer : IDisposable
     /// Special-token IDs are not stored inside the SentencePiece model; they must match the original checkpoint.
     /// </remarks>
     public static DebertaTokenizer FromFile(
-        string spModelPath,
-        int clsId, int sepId, int padId, int maskId, int unkId,
+        string? spModelPath = null,
+        int padId = 0,
+        int clsId = 1,
+        int sepId = 2,
+        int unkId = 3,
+        int maskId = 128000,
         int maxLen = 512,
         TruncationStrategy truncation = TruncationStrategy.LongestFirst)
     {
+        // Default to relative path in output directory: ./onnx/spm.model
+        if (string.IsNullOrWhiteSpace(spModelPath))
+        {
+            spModelPath = Path.Combine(AppContext.BaseDirectory, "onnx", "spm.model");
+        }
+
         if (!File.Exists(spModelPath))
             throw new FileNotFoundException($"SentencePiece model not found: {spModelPath}");
 
         using var fs = File.OpenRead(spModelPath);
-        return FromStream(fs, clsId, sepId, padId, maskId, unkId, maxLen, truncation);
+        return FromStream(fs, padId, clsId, sepId, unkId, maskId, maxLen, truncation);
     }
 
     /// <summary>
     /// Creates a tokenizer from a SentencePiece <c>spm.model</c> stream.
     /// </summary>
     /// <param name="spModelStream">Open stream providing the <c>spm.model</c> contents.</param>
+    /// <param name="padId">ID of <c>[PAD]</c>.</param>
     /// <param name="clsId">ID of <c>[CLS]</c>.</param>
     /// <param name="sepId">ID of <c>[SEP]</c>.</param>
-    /// <param name="padId">ID of <c>[PAD]</c>.</param>
-    /// <param name="maskId">ID of <c>[MASK]</c>.</param>
     /// <param name="unkId">ID of <c>[UNK]</c>.</param>
+    /// <param name="maskId">ID of <c>[MASK]</c>.</param>
     /// <param name="maxLen">Maximum sequence length (includes specials and padding).</param>
     /// <param name="truncation">Truncation strategy for pairs and singles.</param>
     /// <returns>Configured <see cref="DebertaTokenizer"/> instance.</returns>
@@ -112,7 +126,11 @@ public sealed class DebertaTokenizer : IDisposable
     /// </remarks>
     public static DebertaTokenizer FromStream(
         Stream spModelStream,
-        int clsId, int sepId, int padId, int maskId, int unkId,
+        int padId = 0,
+        int clsId = 1,
+        int sepId = 2,
+        int unkId = 3,
+        int maskId = 128000,
         int maxLen = 512,
         TruncationStrategy truncation = TruncationStrategy.LongestFirst)
     {
@@ -130,7 +148,7 @@ public sealed class DebertaTokenizer : IDisposable
                 ["[UNK]"] = unkId
             });
 
-        return new DebertaTokenizer(sp, clsId, sepId, padId, maskId, unkId, maxLen, truncation);
+        return new DebertaTokenizer(sp, padId, clsId, sepId, unkId, maskId, maxLen, truncation);
     }
 
     /// <summary>

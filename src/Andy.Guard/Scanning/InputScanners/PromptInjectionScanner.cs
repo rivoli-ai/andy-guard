@@ -12,17 +12,17 @@ namespace Andy.Guard.InputScanners;
 ///
 /// Uses <see cref="DebertaTokenizer"/> for fast, HuggingFace-compatible preprocessing when configured
 /// and falls back to a lightweight heuristic scorer otherwise. This design mirrors Protect AI's
-/// prompt_injection LLM Guard approach: tokenize → classify → threshold.
-///
-/// Configuration is read from environment variables to avoid hardcoding model specifics:
-/// - <c>ANDY_GUARD_DEBERTA_SPM_PATH</c>: Path to the SentencePiece <c>spm.model</c>
-/// - <c>ANDY_GUARD_DEBERTA_MAX_LEN</c>: Max sequence length (default 512)
-/// - <c>ANDY_GUARD_DEBERTA_CLS_ID</c>, <c>..._SEP_ID</c>, <c>..._PAD_ID</c>, <c>..._MASK_ID</c>, <c>..._UNK_ID</c>
-/// - <c>ANDY_GUARD_PI_THRESHOLD</c>: Probability threshold (default 0.5)
-///
-/// If the tokenizer can be created (env configured), encodings are produced and included in metadata.
+/// prompt_injection LLM Guard approach: tokenize → classify → threshold. This scanners default to the model: protectai/deberta-v3-base-prompt-injection-v2.
+/// <br></br>
+/// <br>Configuration is read from environment variables to avoid hardcoding model specifics:</br>
+/// <br>- <c>ANDY_GUARD_DEBERTA_SPM_PATH</c>: Path to the SentencePiece <c>spm.model</c></br>
+/// <br>- <c>ANDY_GUARD_DEBERTA_MAX_LEN</c>: Max sequence length (default 512)</br>
+/// <br>- <c>ANDY_GUARD_DEBERTA_CLS_ID</c>, <c>..._SEP_ID</c>, <c>..._PAD_ID</c>, <c>..._MASK_ID</c>, <c>..._UNK_ID</c></br>
+/// <br>- <c>ANDY_GUARD_PI_THRESHOLD</c>: Probability threshold (default 0.5)</br>
+/// <br></br>
+/// <br>If the tokenizer can be created (env configured), encodings are produced and included in metadata.
 /// Actual model inference can be plugged in via constructor injection of a scorer; otherwise a
-/// high-recall heuristic is used to preserve behavior without external dependencies.
+/// high-recall heuristic is used to preserve behavior without external dependencies.</br>
 /// </summary>
 public class PromptInjectionScanner : IInputScanner
 {
@@ -57,8 +57,9 @@ public class PromptInjectionScanner : IInputScanner
             _modelScore = (text) => modelScorer(_tokenizer.Encode(text));
         }
 
-        // Self-contained ONNX runtime path (optional). Enabled if model path is provided via env.
-        var onnxPath = Environment.GetEnvironmentVariable("ANDY_GUARD_PI_ONNX_PATH");
+
+        // Self-contained ONNX runtime path (optional). If not provided, try to download from Hugging Face.
+        var onnxPath = ResolveOnnxModelPath();
         if (!string.IsNullOrWhiteSpace(onnxPath) && File.Exists(onnxPath))
         {
             try
@@ -254,6 +255,67 @@ public class PromptInjectionScanner : IInputScanner
         try
         {
             return DebertaTokenizer.FromFile(spmPath!, clsId, sepId, padId, maskId, unkId, maxLen);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Resolve a usable ONNX model path by checking env, then attempting a Hugging Face download.
+    /// Env vars:
+    /// - ANDY_GUARD_PI_ONNX_PATH: absolute/relative path to a local .onnx file
+    /// - ANDY_GUARD_PI_ONNX_HF_REPO: repo id (default: protectai/deberta-v3-base-prompt-injection-v2)
+    /// - ANDY_GUARD_PI_ONNX_HF_REVISION: branch/tag/commit (default: main)
+    /// - ANDY_GUARD_PI_ONNX_FILENAME: path inside the repo (default: onnx/model.onnx)
+    /// - ANDY_GUARD_PI_ONNX_LOCAL_PATH: where to place the downloaded file (default: ./onnx/model.onnx)
+    /// </summary>
+    private static string? ResolveOnnxModelPath()
+    {
+        // 1) If explicit path provided and exists, use it.
+        var explicitPath = Environment.GetEnvironmentVariable("ANDY_GUARD_PI_ONNX_PATH");
+        if (!string.IsNullOrWhiteSpace(explicitPath) && File.Exists(explicitPath))
+            return explicitPath;
+
+        // 2) Attempt download from Hugging Face if repo is specified (or use default).
+        var repo = Environment.GetEnvironmentVariable("ANDY_GUARD_PI_ONNX_HF_REPO");
+        if (string.IsNullOrWhiteSpace(repo))
+            repo = "protectai/deberta-v3-base-prompt-injection-v2";
+
+        var revision = Environment.GetEnvironmentVariable("ANDY_GUARD_PI_ONNX_HF_REVISION");
+        if (string.IsNullOrWhiteSpace(revision))
+            revision = "main";
+
+        var fileInRepo = Environment.GetEnvironmentVariable("ANDY_GUARD_PI_ONNX_FILENAME");
+        if (string.IsNullOrWhiteSpace(fileInRepo))
+            fileInRepo = "onnx/model.onnx";
+
+        // Default local target: app output folder ./onnx/model.onnx
+        var baseDir = AppContext.BaseDirectory;
+        var localDefault = Path.Combine(baseDir, "onnx", "model.onnx");
+        var localTarget = Environment.GetEnvironmentVariable("ANDY_GUARD_PI_ONNX_LOCAL_PATH");
+        if (string.IsNullOrWhiteSpace(localTarget))
+            localTarget = localDefault;
+
+        // If already downloaded, use it
+        if (File.Exists(localTarget))
+            return localTarget;
+
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(localTarget)!);
+            var url = $"https://huggingface.co/{repo}/resolve/{revision}/{fileInRepo}?download=true";
+
+            using var http = new HttpClient();
+            using var resp = http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
+            if (!resp.IsSuccessStatusCode)
+                return null;
+
+            using var src = resp.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
+            using var dst = File.Create(localTarget);
+            src.CopyTo(dst);
+            return localTarget;
         }
         catch
         {
