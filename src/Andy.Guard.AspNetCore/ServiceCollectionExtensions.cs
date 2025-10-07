@@ -20,6 +20,7 @@ public static class ServiceCollectionExtensions
         services.AddOptions<PromptScanningOptions>();
 
         services.AddSingleton<IInputScanner, PromptInjectionScanner>();
+        services.AddSingleton<IInputScanner, CodeBertScanner>();
         // Add other input scanners here
         // e.g., services.AddSingleton<IInputScanner, PiiScanner>();
 
