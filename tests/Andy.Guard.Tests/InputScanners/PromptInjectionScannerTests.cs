@@ -10,12 +10,10 @@ using Andy.Guard;
 using Andy.Guard.InputScanners;
 using FluentAssertions;
 using Microsoft.Identity.Abstractions;
-using Testcontainers.Builders;
-using Testcontainers.Configurations;
-using Testcontainers.Containers;
-using Testcontainers.Containers.Abstractions;
-using Testcontainers.Networks;
-using Testcontainers.WaitStrategies;
+using DotNet.Testcontainers.Builders;
+using DotNet.Testcontainers.Configurations;
+using DotNet.Testcontainers.Containers;
+using DotNet.Testcontainers.Networks;
 using Xunit;
 
 namespace Andy.Guard.Tests.InputScanners;
@@ -46,7 +44,7 @@ public sealed class InferenceServiceFixture : IAsyncLifetime, IDisposable
     private const int TokenizerPort = 8000;
     private const int InferencePort = 8080;
 
-    private readonly IDockerNetwork _network;
+    private readonly INetwork _network;
     private readonly IContainer _tokenizerContainer;
     private readonly IContainer _inferenceContainer;
 
