@@ -36,9 +36,9 @@ internal sealed class NoopAuthorizationHeaderProvider : IAuthorizationHeaderProv
     {
         if (options?.RequestAppToken == true)
         {
-            throw new InvalidOperationException(
-                "Downstream API invocation requested an app token but no authorization header provider is configured. " +
-                "Configure Microsoft.Identity.Web token acquisition or disable RequestAppToken.");
+            // DownstreamApi.CallApiForAppAsync always toggles RequestAppToken to true; return an empty header
+            // so local development can proceed without Entra integration.
+            return Task.FromResult(string.Empty);
         }
 
         return Task.FromResult(string.Empty);
