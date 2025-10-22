@@ -22,18 +22,41 @@ public sealed class OutputScannerRegistry : IOutputScannerRegistry
         IEnumerable<string>? scanners = null,
         ScanOptions? options = null)
     {
-        var selected = (scanners is null || !scanners.Any())
-            ? _scanners.Values
-            : scanners.Where(_scanners.ContainsKey).Select(name => _scanners[name]);
+        IEnumerable<IOutputScanner> selectedScanners;
 
-        var result = new Dictionary<string, ScanResult>(StringComparer.OrdinalIgnoreCase);
-        foreach (var scanner in selected)
+        if (scanners is null)
         {
-            var scan = await scanner.ScanAsync(prompt, output, options);
-            result[scanner.Name] = scan;
+            selectedScanners = _scanners.Values;
+        }
+        else
+        {
+            var scannerNames = scanners as string[] ?? scanners.ToArray();
+            selectedScanners = scannerNames.Length == 0
+                ? _scanners.Values
+                : scannerNames.Where(_scanners.ContainsKey).Select(name => _scanners[name]);
         }
 
-        return result;
+        var scannerArray = selectedScanners as IOutputScanner[] ?? selectedScanners.ToArray();
+        if (scannerArray.Length == 0)
+        {
+            return new Dictionary<string, ScanResult>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        var scanTasks = new (string Name, Task<ScanResult> Task)[scannerArray.Length];
+        for (var i = 0; i < scannerArray.Length; i++)
+        {
+            var scanner = scannerArray[i];
+            scanTasks[i] = (scanner.Name, scanner.ScanAsync(prompt, output, options));
+        }
+
+        await Task.WhenAll(scanTasks.Select(static tuple => tuple.Task));
+
+        var scanResults = new Dictionary<string, ScanResult>(scannerArray.Length, StringComparer.OrdinalIgnoreCase);
+        foreach (var (name, task) in scanTasks)
+        {
+            scanResults[name] = task.Result;
+        }
+
+        return scanResults;
     }
 }
-
