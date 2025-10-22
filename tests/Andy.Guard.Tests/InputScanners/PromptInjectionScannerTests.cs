@@ -1,12 +1,5 @@
-
-using System;
-using System.IO;
 using System.Net;
-using System.Net.Http;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using Andy.Guard;
 using Andy.Guard.InputScanners;
 using FluentAssertions;
 using Microsoft.Identity.Abstractions;
@@ -14,7 +7,6 @@ using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
 using DotNet.Testcontainers.Networks;
-using Xunit;
 
 namespace Andy.Guard.Tests.InputScanners;
 
