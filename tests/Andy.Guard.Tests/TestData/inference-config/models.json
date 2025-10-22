@@ -1,0 +1,42 @@
+{
+  "models": [
+    {
+      "id": "deberta-prompt-injection",
+      "name": "DeBERTa Prompt Injection",
+      "huggingface_model": "protectai/deberta-v3-base-prompt-injection-v2",
+      "output_dir": "deberta-v3-base-prompt-injection-v2",
+      "check_files": ["model.onnx", "tokenizer.json"],
+      "task_type": "sequence-classification",
+      "max_length": 512,
+      "opset_version": 14,
+      "required": true,
+      "labels": ["SAFE", "INJECTION"],
+      "description": "DeBERTa v3 model fine-tuned for detecting prompt injection attacks"
+    },
+    {
+      "id": "graphcodebert-vulnerability",
+      "name": "GraphCodeBERT Solidity Vulnerability",
+      "huggingface_model": "angusleung100/GraphCodeBERT-Base-Solidity-Vulnerability",
+      "output_dir": "graphcodebert-solidity-vulnerability",
+      "check_files": ["model.onnx", "tokenizer.json", "vocab.json"],
+      "task_type": "sequence-classification",
+      "max_length": 512,
+      "opset_version": 14,
+      "required": true,
+      "labels": ["SAFE", "VULNERABLE"],
+      "description": "GraphCodeBERT model for detecting vulnerabilities in Solidity smart contracts"
+    }
+  ],
+  "config": {
+    "models_base_dir": "/models",
+    "conversion_script": "convert_to_onnx.py",
+    "tokenizer_service_url": "http://localhost:8000",
+    "python_requirements": [
+      "torch --index-url https://download.pytorch.org/whl/cpu",
+      "transformers",
+      "optimum[onnxruntime]",
+      "onnx",
+      "onnxscript"
+    ]
+  }
+}
