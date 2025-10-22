@@ -19,12 +19,13 @@ public static class ServiceCollectionExtensions
         // Options support for middleware configuration via IOptions<PromptScanningOptions>
         services.AddOptions<PromptScanningOptions>();
 
-        services.AddSingleton<IInputScanner, PromptInjectionScanner>();
+        services.AddSingleton<IPromptInjectionResultMapper, PromptInjectionResultMapper>();
+        services.AddScoped<IInputScanner, PromptInjectionScanner>();
         // Add other input scanners here
         // e.g., services.AddSingleton<IInputScanner, PiiScanner>();
 
         // Generic adapters and registry
-        services.AddSingleton<IInputScannerRegistry, InputScannerRegistry>();
+        services.AddScoped<IInputScannerRegistry, InputScannerRegistry>();
 
         return services;
     }

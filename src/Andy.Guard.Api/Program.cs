@@ -1,6 +1,7 @@
 using Andy.Guard.AspNetCore;
 using Andy.Guard.AspNetCore.Middleware;
 using Andy.Guard.AspNetCore.Options;
+using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,7 @@ builder.Services.AddSwaggerGen();
 // Register default input scanners and registries
 builder.Services.AddPromptScanning();
 builder.Services.AddModelOutputScanning();
+builder.Services.AddDownstreamApi("PromptInjection", builder.Configuration.GetSection("DownstreamApis:PromptInjection"));
 
 var app = builder.Build();
 

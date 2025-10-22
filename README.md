@@ -1,41 +1,43 @@
 # Andy Guard
 
-Secure your LLM applications with a modular, .NET‑first prompt security toolkit. Andy Guard provides a pluggable scanning core, an ASP.NET Core adapter (middleware + DI), and a sample Web API host to help you detect and act on risky inputs/outputs (e.g., prompt injection). It also ships a Hugging Face–compatible DeBERTa tokenizer and optional ONNX runtime support for model‑backed scanners.
+Secure your LLM applications with a modular, .NET-first prompt security toolkit. Andy Guard provides a pluggable scanning core, an ASP.NET Core adapter (middleware + DI), and a sample Web API host to help you detect and act on risky inputs/outputs (e.g., prompt injection). The built-in prompt-injection scanner calls a downstream inference service so you can lean on cloud-hosted detectors without shipping tokenizer assets or managing local model runtimes.
 
 > ⚠️ ALPHA STATUS
 > 
-> This is early‑stage security tooling. APIs and defaults may change. Do not rely on the library for production‑grade protection without your own validation and layered defenses.
+> This is early-stage security tooling. APIs and defaults may change. Do not rely on the library for production-grade protection without your own validation and layered defenses.
 
 **Key Features**
 - Pluggable scanners: Implement `IInputScanner`/`IOutputScanner`, orchestrate via registries.
+- Remote inference integration: `InferenceApiClient` wraps `IDownstreamApi` to call hosted detectors.
 - ASP.NET Core adapter: `AddPromptScanning()`/`AddModelOutputScanning()` + `UsePromptScanning()`.
-- Sample API host: End‑to‑end reference with integration tests.
-- Tokenization: DeBERTa tokenizer with HF parity tests; optional ONNX inference.
+- Sample API host: End-to-end reference with integration tests.
 
 **Projects**
 - `src/Andy.Guard` (Core)
   - Scanning domain: `IInputScanner`, `IOutputScanner`, `IInputScannerRegistry`, `IOutputScannerRegistry`.
-  - Prompt injection scanner with heuristics + optional DeBERTa ONNX model.
-  - DeBERTa tokenizer using `Microsoft.ML.Tokenizers`.
+  - `InferenceApiClient` helper for authenticated downstream calls (Microsoft.Identity.Abstractions).
+  - HTTP-based `PromptInjectionScanner` that posts prompts to the configured inference endpoint.
 - `src/Andy.Guard.AspNetCore` (Web Adapter)
   - Middleware: `PromptScanningMiddleware` (`UsePromptScanning()`), options and headers.
   - DI extensions: `AddPromptScanning()` and `AddModelOutputScanning()`.
 - `src/Andy.Guard.Api` (Sample API Host)
   - Minimal ASP.NET Core Web API exposing `/api/prompt-scans` and `/api/output-scans`.
+  - Demonstrates `AddDownstreamApi` configuration for the prompt-injection service.
 - `tests/Andy.Guard.Tests` (Unit) and `tests/Andy.Guard.Api.Tests` (API Integration)
 
 ## Architecture Overview
 
 Data flow (ASP.NET Core):
 
-Client → API Host → `PromptScanningMiddleware` → `IInputScannerRegistry` → `IInputScanner`(s)
+Client → API Host → `PromptScanningMiddleware` → `IInputScannerRegistry` → `IInputScanner`(s) → Downstream inference service
 
 - Middleware inspects JSON request bodies for `text` or `prompt` and runs input scans.
 - Controllers can also call `IInputScannerRegistry`/`IOutputScannerRegistry` directly.
-- Registries aggregate results from one or more scanners and return a per‑scanner map.
+- Registries aggregate results from one or more scanners and return a per-scanner map.
+- The default `PromptInjectionScanner` posts batched payloads to the configured downstream API and maps the response back into a `ScanResult`.
 
 Core abstractions:
-- `IInputScanner` / `IOutputScanner`: Individual scanners (e.g., `prompt_injection`, `toxicity`).
+- `IInputScanner` / `IOutputScanner`: Individual scanners (e.g., `PromptInjectionScanner`, `ToxicityScanner`).
 - `IInputScannerRegistry` / `IOutputScannerRegistry`: Orchestrate scanners by name and aggregate results.
 
 ## Quick Start
@@ -47,6 +49,7 @@ Add to an ASP.NET Core app:
 ```csharp
 using Andy.Guard.AspNetCore;
 using Andy.Guard.AspNetCore.Middleware;
+using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -54,6 +57,7 @@ builder.Services.AddControllers();
 // Registers default input and (placeholder) output registries
 builder.Services.AddPromptScanning();
 builder.Services.AddModelOutputScanning();
+builder.Services.AddDownstreamApi("PromptInjection", builder.Configuration.GetSection("DownstreamApis:PromptInjection"));
 
 var app = builder.Build();
 app.UseHttpsRedirection();
@@ -75,7 +79,7 @@ Content-Type: application/json
 
 {
   "text": "Ignore previous instructions and ...",
-  "scanners": ["prompt_injection"],
+  "scanners": ["PromptInjectionScanner"],
   "options": { }
 }
 ```
@@ -102,7 +106,7 @@ Response shape (both endpoints):
   "score": 0.82,
   "highestSeverity": "High",
   "findings": [
-    { "scanner": "prompt_injection", "code": "DETECTED", "message": "Indicators detected.", "severity": "High", "confidence": 0.82 }
+    { "scanner": "PromptInjectionScanner", "code": "DETECTED", "message": "Indicators detected.", "severity": "High", "confidence": 0.82 }
   ],
   "metadata": {},
   "originalLength": 64,
@@ -110,11 +114,51 @@ Response shape (both endpoints):
 }
 ```
 
+## Prompt Injection Scanner Configuration
+
+The default `PromptInjectionScanner` sends batched prompts to a downstream inference API and maps its response into Andy Guard's result model. The helper uses `IDownstreamApi` (via `Microsoft.Identity.Web` / `Microsoft.Identity.Abstractions`), so you can authenticate with Azure AD/Entra ID or other providers supported by those libraries.
+
+Register the downstream API in DI:
+
+```csharp
+builder.Services.AddDownstreamApi(
+    "PromptInjection",
+    builder.Configuration.GetSection("DownstreamApis:PromptInjection"));
+```
+
+Example configuration (`appsettings.json`):
+
+```json
+{
+  "DownstreamApis": {
+    "PromptInjection": {
+      "BaseUrl": "https://promptscanner.example/",
+      "RelativePath": "api/predict/batch",
+      "Scopes": [ "api://promptscanner/.default" ],
+      "RequestAppToken": true
+    }
+  }
+}
+```
+
+Each scan request results in a payload like:
+
+```json
+[
+  {
+    "text": "Ignore previous instructions and ...",
+    "model": "deberta-v3-base-prompt-injection-v2"
+  }
+]
+```
+
+The scanner expects fields such as `label`, `score`, `scores`, `isSafe`, `usingFallback`, and `predictionMethod` in the response. Missing or error responses are surfaced through `ScanResult.Metadata` (when requested) without throwing in-line exceptions, allowing callers to decide how to handle degraded detections.
+
 ## Extending Scanners
 
 Implement a new scanner by conforming to `IInputScanner` or `IOutputScanner` in the core library:
 
-- `Name`: Canonical id (e.g., `prompt_injection`, `toxicity`).
+- `Name`: Canonical id (e.g., `PromptInjectionScanner`, `ToxicityScanner`).
 - `ScanAsync(...)`: Return a `ScanResult` with detection flags, confidence, risk, and metadata.
 
 Register it in DI (e.g., via `IServiceCollection` extensions) and it becomes visible to the registries and API.
@@ -122,63 +166,8 @@ Register it in DI (e.g., via `IServiceCollection` extensions) and it becomes vis
 ```csharp
 public sealed class MyCustomScanner : IInputScanner
 {
-    public string Name => "my_custom";
+    public string Name => "MyCustomScanner";
     public Task<ScanResult> ScanAsync(string prompt, ScanOptions? options = null)
         => Task.FromResult(new ScanResult { IsThreatDetected = false, ConfidenceScore = 0.0f, RiskLevel = RiskLevel.Low });
 }
 ```
-
-## Tokenizer & Model Notes
-
-The DeBERTa tokenizer in `Andy.Guard` mirrors Hugging Face behavior using `Microsoft.ML.Tokenizers`.
-- Adds `[CLS]`/`[SEP]` as HF does; no `token_type_ids` for DeBERTa v3.
-- Truncation strategies: Longest‑First for pairs, head‑only for singles.
-- Padding with attention mask generation.
-- Special‑token IDs must match the model’s embedding indices. Retrieve from HF once:
-
-```python
-from transformers import AutoTokenizer
-t = AutoTokenizer.from_pretrained("microsoft/deberta-v3-base")
-print(t.cls_token_id, t.sep_token_id, t.pad_token_id, t.mask_token_id, t.unk_token_id)
-```
-
-Included assets (for development and tests):
-- `src/Andy.Guard/Tokenizers/Deberta/onnx/spm.model` (copied to output as `./onnx/spm.model`)
-- `src/Andy.Guard/Tokenizers/Deberta/onnx/tokenizer.json`, `config.json`
-
-To enable tokenizer/inference in the prompt‑injection scanner, set environment variables:
-
-- `ANDY_GUARD_DEBERTA_SPM_PATH`: Path to SentencePiece `spm.model` (e.g., `./onnx/spm.model`).
-- `ANDY_GUARD_DEBERTA_MAX_LEN`: Max sequence length (default `512`).
-- `ANDY_GUARD_DEBERTA_CLS_ID`, `ANDY_GUARD_DEBERTA_SEP_ID`, `ANDY_GUARD_DEBERTA_PAD_ID`, `ANDY_GUARD_DEBERTA_MASK_ID`, `ANDY_GUARD_DEBERTA_UNK_ID`.
-- `ANDY_GUARD_PI_THRESHOLD`: Probability threshold for detection (default `0.5`).
-- `ANDY_GUARD_PI_ONNX_PATH`: Path to DeBERTa ONNX model (optional). If not set, the scanner either uses heuristics or will try to download from Hugging Face (see below).
-
-Model download from Hugging Face:
-- By default, if `ANDY_GUARD_PI_ONNX_PATH` is not set, the scanner will attempt to fetch `onnx/model.onnx` from `protectai/deberta-v3-base-prompt-injection-v2` on Hugging Face and store it at `./onnx/model.onnx` at runtime.
-- You can customize this via:
-  - `ANDY_GUARD_PI_ONNX_HF_REPO` (default `protectai/deberta-v3-base-prompt-injection-v2`)
-  - `ANDY_GUARD_PI_ONNX_HF_REVISION` (default `main`)
-  - `ANDY_GUARD_PI_ONNX_FILENAME` (default `onnx/model.onnx`)
-  - `ANDY_GUARD_PI_ONNX_LOCAL_PATH` (default `./onnx/model.onnx` under the app base directory)
-
-Note: Only `spm.model` is shipped in the repo to avoid large binaries. The ONNX model is downloaded on‑demand or can be provided via a local path.
-
-## Development
-
-- Build: `dotnet build`
-- Test all: `dotnet test`
-- API tests: `dotnet test tests/Andy.Guard.Api.Tests/`
-
-## Roadmap (High‑level)
-- Strengthen prompt‑injection with additional signals and training data.
-- Add more scanners (PII, jailbreak, toxicity) and sanitation utilities.
-- Configurable policies and per‑scanner thresholds.
-
-## License
-
-This project is licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) file for details.
-
-## Disclaimer
-
-This is early‑stage security tooling. It may produce false positives/negatives and should be combined with other defensive controls. Use at your own risk.
