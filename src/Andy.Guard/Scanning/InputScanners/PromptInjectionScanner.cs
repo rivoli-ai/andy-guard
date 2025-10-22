@@ -1,11 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using Andy.Guard;
 using Andy.Guard.Scanning;
 using Andy.Guard.Scanning.Abstractions;
 
@@ -13,8 +8,8 @@ namespace Andy.Guard.InputScanners;
 
 public class PromptInjectionScanner : IInputScanner
 {
-    private const string DownstreamServiceName = "PromptInjection";
-    private const string BatchEndpointRelativePath = "api/predict/batch";
+    private const string DownstreamServiceName = "AndyInference";
+    private const string BatchEndpointRelativePath = "predict/batch";
     private const string PromptInjectionModelId = "deberta-v3-base-prompt-injection-v2";
     private readonly InferenceApiClient _apiClient;
     private readonly IPromptInjectionResultMapper _resultMapper;

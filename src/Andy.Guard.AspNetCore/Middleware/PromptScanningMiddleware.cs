@@ -4,6 +4,7 @@ using Andy.Guard.Scanning;
 using Andy.Guard.Scanning.Abstractions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace Andy.Guard.AspNetCore.Middleware;
@@ -16,20 +17,13 @@ namespace Andy.Guard.AspNetCore.Middleware;
 public sealed class PromptScanningMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly IInputScannerRegistry _registry;
     private readonly PromptScanningOptions _options;
 
-    public PromptScanningMiddleware(RequestDelegate next, IInputScannerRegistry registry, PromptScanningOptions options)
+    public PromptScanningMiddleware(RequestDelegate next, IOptions<PromptScanningOptions> options)
     {
-        _next = next;
-        _registry = registry;
-        _options = options ?? new PromptScanningOptions();
+        _next = next ?? throw new ArgumentNullException(nameof(next));
+        _options = options?.Value ?? new PromptScanningOptions();
     }
-
-    // Support ASP.NET Core Options pattern via IOptions
-    public PromptScanningMiddleware(RequestDelegate next, IInputScannerRegistry registry, IOptions<PromptScanningOptions> options)
-        : this(next, registry, options?.Value ?? new PromptScanningOptions())
-    { }
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -50,7 +44,10 @@ public sealed class PromptScanningMiddleware
                     string? text = TryGetText(doc.RootElement);
 
                     if (!string.IsNullOrEmpty(text))
-                        scans = await _registry.ScanAsync(text!, _options.EnabledScanners, _options.ScanOptions);
+                    {
+                        var registry = context.RequestServices.GetRequiredService<IInputScannerRegistry>();
+                        scans = await registry.ScanAsync(text, _options.EnabledScanners, _options.ScanOptions);
+                    }
                 }
             }
             catch (JsonException)
@@ -144,16 +141,16 @@ public static class PromptScanningMiddlewareExtensions
     /// Scans using the specified input scanner names (case-insensitive). Unknown names are ignored.
     /// </summary>
     public static IApplicationBuilder UsePromptScanning(this IApplicationBuilder app, params string[] scannerNames)
-        => app.UseMiddleware<PromptScanningMiddleware>(new PromptScanningOptions
+        => app.UseMiddleware<PromptScanningMiddleware>(Microsoft.Extensions.Options.Options.Create(new PromptScanningOptions
         {
             EnabledScanners = (scannerNames ?? Array.Empty<string>()).Where(s => !string.IsNullOrWhiteSpace(s)).ToArray()
-        });
+        }));
 
     /// <summary>
     /// Scans using custom options (e.g., enabled scanners, thresholds).
     /// </summary>
     public static IApplicationBuilder UsePromptScanning(this IApplicationBuilder app, PromptScanningOptions options)
-        => app.UseMiddleware<PromptScanningMiddleware>(options ?? new PromptScanningOptions());
+        => app.UseMiddleware<PromptScanningMiddleware>(Microsoft.Extensions.Options.Options.Create(options ?? new PromptScanningOptions()));
 }
 
 /// <summary>

@@ -10,11 +10,12 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient();
 
 // Register default input scanners and registries
 builder.Services.AddPromptScanning();
 builder.Services.AddModelOutputScanning();
-builder.Services.AddDownstreamApi("PromptInjection", builder.Configuration.GetSection("DownstreamApis:PromptInjection"));
+builder.Services.AddDownstreamApi("AndyInference", builder.Configuration.GetSection("DownstreamApis:AndyInference"));
 
 var app = builder.Build();
 
@@ -29,7 +30,7 @@ app.UseHttpsRedirection();
 
 // Scan incoming JSON requests that carry a top-level "prompt" or "text"
 // Use middleware but do not block responses during tests; expose headers only
-app.UsePromptScanning(new PromptScanningOptions { BlockOnThreat = false });
+app.UsePromptScanning();
 
 app.MapControllers();
 

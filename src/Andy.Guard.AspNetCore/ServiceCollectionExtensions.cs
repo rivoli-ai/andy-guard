@@ -1,8 +1,12 @@
+using System;
+using Andy.Guard;
 using Andy.Guard.InputScanners;
 using Andy.Guard.AspNetCore.Options;
 using Andy.Guard.Scanning;
 using Andy.Guard.Scanning.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Identity.Abstractions;
 
 namespace Andy.Guard.AspNetCore;
 
@@ -16,6 +20,8 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddPromptScanning(this IServiceCollection services)
     {
+        services.AddGuardCoreServices();
+
         // Options support for middleware configuration via IOptions<PromptScanningOptions>
         services.AddOptions<PromptScanningOptions>();
 
@@ -35,12 +41,25 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddModelOutputScanning(this IServiceCollection services)
     {
+        services.AddGuardCoreServices();
+
         services.AddOptions<ModelOutputScanningOptions>();
         // Add other output scanners here
         // e.g., services.AddSingleton<IOutputScanner, ToxicityScanner>();
 
         // Generic registry for output scanners
         services.AddSingleton<IOutputScannerRegistry, OutputScannerRegistry>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddGuardCoreServices(this IServiceCollection services)
+    {
+        if (services == null)
+            throw new ArgumentNullException(nameof(services));
+
+        services.TryAddSingleton<IAuthorizationHeaderProvider, NoopAuthorizationHeaderProvider>();
+        services.AddScoped<InferenceApiClient>();
 
         return services;
     }

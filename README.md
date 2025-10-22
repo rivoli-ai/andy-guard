@@ -57,7 +57,7 @@ builder.Services.AddControllers();
 // Registers default input and (placeholder) output registries
 builder.Services.AddPromptScanning();
 builder.Services.AddModelOutputScanning();
-builder.Services.AddDownstreamApi("PromptInjection", builder.Configuration.GetSection("DownstreamApis:PromptInjection"));
+builder.Services.AddDownstreamApi("AndyInference", builder.Configuration.GetSection("DownstreamApis:AndyInference"));
 
 var app = builder.Build();
 app.UseHttpsRedirection();
@@ -122,8 +122,8 @@ Register the downstream API in DI:
 
 ```csharp
 builder.Services.AddDownstreamApi(
-    "PromptInjection",
-    builder.Configuration.GetSection("DownstreamApis:PromptInjection"));
+    "AndyInference",
+    builder.Configuration.GetSection("DownstreamApis:AndyInference"));
 ```
 
 Example configuration (`appsettings.json`):
@@ -131,10 +131,10 @@ Example configuration (`appsettings.json`):
 ```json
 {
   "DownstreamApis": {
-    "PromptInjection": {
-      "BaseUrl": "https://promptscanner.example/",
-      "RelativePath": "api/predict/batch",
-      "Scopes": [ "api://promptscanner/.default" ],
+    "AndyInference": {
+      "BaseUrl": "https://inference-service/api",
+      "RelativePath": "predict/batch",
+      "Scopes": [ "api://inference-service/.default" ],
       "RequestAppToken": true
     }
   }
