@@ -10,7 +10,7 @@ Secure your LLM applications with a modular, .NET-first prompt security toolkit.
 - Pluggable scanners: Implement `IInputScanner`/`IOutputScanner`, orchestrate via registries.
 - Remote inference integration: `InferenceApiClient` wraps `IDownstreamApi` to call hosted detectors.
 - ASP.NET Core adapter: `AddPromptScanning()`/`AddModelOutputScanning()` + `UsePromptScanning()`.
-- Sample API host: End-to-end reference with integration tests.
+- API host: End-to-end reference
 
 **Projects**
 - `src/Andy.Guard` (Core)
@@ -23,7 +23,7 @@ Secure your LLM applications with a modular, .NET-first prompt security toolkit.
 - `src/Andy.Guard.Api` (Sample API Host)
   - Minimal ASP.NET Core Web API exposing `/api/prompt-scans` and `/api/output-scans`.
   - Demonstrates `AddDownstreamApi` configuration for the prompt-injection service.
-- `tests/Andy.Guard.Tests` (Unit) and `tests/Andy.Guard.Api.Tests` (API Integration)
+- `tests/Andy.Guard.Api.Tests` (Integration) – xUnit suite using Testcontainers to exercise the sample host and scanners end-to-end.
 
 ## Architecture Overview
 
@@ -132,10 +132,7 @@ Example configuration (`appsettings.json`):
 {
   "DownstreamApis": {
     "AndyInference": {
-      "BaseUrl": "https://inference-service/api",
-      "RelativePath": "predict/batch",
-      "Scopes": [ "api://inference-service/.default" ],
-      "RequestAppToken": true
+      "BaseUrl": "https://inference-service/api"
     }
   }
 }
@@ -153,6 +150,30 @@ Each scan request results in a payload like:
 ```
 
 The scanner expects fields such as `label`, `score`, `scores`, `isSafe`, `usingFallback`, and `predictionMethod` in the response. Missing or error responses are surfaced through `ScanResult.Metadata` (when requested) without throwing in-line exceptions, allowing callers to decide how to handle degraded detections.
+
+## Testing
+
+Execute all tests with:
+
+```bash
+dotnet test
+```
+
+### Integration suite (`tests/Andy.Guard.Api.Tests`)
+
+The integration tests spin up a full inference stack (tokenizer + ASP.NET inference API) with [Testcontainers](https://github.com/testcontainers/testcontainers-dotnet) and run the sample host against it. Be aware of the following prerequisites:
+
+- **Docker** must be available and running. Testcontainers will create an isolated network and expose dynamic ports locally.
+- The suite expects two local images:
+  - `andy-inference-models-tokenizer-service:latest`
+  - `andy-inference-models-inference-service:latest`
+
+  Build them from the [`andy-inference-models`](https://github.com/protectai/andy-inference-models) repository (or your fork) before running tests.
+  The first build downloads and converts the ONNX models; subsequent runs reuse the cached layers.
+
+- The tokenizer container reads `models.json` from a bind mount. By default the fixture copies `tests/Andy.Guard.Api.Tests/TestData/inference-config` into the test output directory and mounts that path automatically. Set `ANDY_INFERENCE_MODELS_CONFIG_PATH` if you want the tests to mount a different configuration directory (for example, a shared cache of models or custom labels).
+
+The integration collection is marked with `DisableParallelization = true` so the containers start only once per test run. Testcontainers automatically cleans up the containers and network after completion.
 
 ## Extending Scanners
 
