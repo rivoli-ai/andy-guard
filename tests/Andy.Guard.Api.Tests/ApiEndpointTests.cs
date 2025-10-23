@@ -3,20 +3,41 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Andy.Guard.Api.Models;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
+using Andy.Guard.Tests;
 
 namespace Andy.Guard.Api.Tests;
 
-public class ScanEndpointTests : IClassFixture<WebApplicationFactory<Program>>
+[Collection(TestCollections.Integration)]
+public class ApiEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly HttpClient _client;
 
-    public ScanEndpointTests(WebApplicationFactory<Program> factory)
+    public ApiEndpointTests(
+        WebApplicationFactory<Program> factory,
+        InferenceServiceFixture inferenceFixture)
     {
-        _client = factory.CreateClient();
+        if (string.IsNullOrWhiteSpace(inferenceFixture.AndyInferenceBaseUrl))
+        {
+            throw new InvalidOperationException("Inference fixture did not expose a base URL.");
+        }
+
+        var configuredFactory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureAppConfiguration((context, config) =>
+            {
+                config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["DownstreamApis:AndyInference:BaseUrl"] = inferenceFixture.AndyInferenceBaseUrl,
+                });
+            });
+        });
+
+        _client = configuredFactory.CreateClient();
     }
 
     [Fact]
-    public async Task Post_PromptScans_WithCleanText_ReturnsOkWithShape()
+    public async Task Post_PromptScans_WithCleanText_ReturnsOk()
     {
         var payload = new { text = "Hello, how are you?" };
         var resp = await _client.PostAsJsonAsync("/api/prompt-scans", payload);

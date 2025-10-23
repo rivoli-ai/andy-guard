@@ -1,6 +1,0 @@
-@Andy.Guard_HostAddress = http://localhost:5030
-
-GET {{Andy.Guard_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

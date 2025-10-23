@@ -1,5 +1,3 @@
-using System;
-using Andy.Guard;
 using Andy.Guard.InputScanners;
 using Andy.Guard.AspNetCore.Options;
 using Andy.Guard.Scanning;
@@ -20,10 +18,13 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddPromptScanning(this IServiceCollection services)
     {
+        ArgumentNullException.ThrowIfNull(services);
+
         services.AddGuardCoreServices();
 
         // Options support for middleware configuration via IOptions<PromptScanningOptions>
         services.AddOptions<PromptScanningOptions>();
+        services.AddScoped<IInputScannerRegistry, InputScannerRegistry>();
 
         services.AddSingleton<IPromptInjectionResultMapper, PromptInjectionResultMapper>();
         services.AddScoped<IInputScanner, PromptInjectionScanner>();
@@ -31,7 +32,6 @@ public static class ServiceCollectionExtensions
         // e.g., services.AddSingleton<IInputScanner, PiiScanner>();
 
         // Generic adapters and registry
-        services.AddScoped<IInputScannerRegistry, InputScannerRegistry>();
 
         return services;
     }
@@ -41,6 +41,8 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddModelOutputScanning(this IServiceCollection services)
     {
+        ArgumentNullException.ThrowIfNull(services);
+
         services.AddGuardCoreServices();
 
         services.AddOptions<ModelOutputScanningOptions>();
@@ -55,8 +57,7 @@ public static class ServiceCollectionExtensions
 
     private static IServiceCollection AddGuardCoreServices(this IServiceCollection services)
     {
-        if (services == null)
-            throw new ArgumentNullException(nameof(services));
+        ArgumentNullException.ThrowIfNull(services);
 
         services.TryAddSingleton<IAuthorizationHeaderProvider, NoopAuthorizationHeaderProvider>();
         services.AddScoped<InferenceApiClient>();

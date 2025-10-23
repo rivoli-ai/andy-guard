@@ -1,9 +1,11 @@
 using Andy.Guard.InputScanners;
+using Andy.Guard.Tests;
 using FluentAssertions;
 
-namespace Andy.Guard.Tests.InputScanners;
+namespace Andy.Guard.Api.Tests.InputScanners;
 
-public sealed class PromptInjectionScannerTests : IClassFixture<InferenceServiceFixture>
+[Collection(TestCollections.Integration)]
+public sealed class PromptInjectionScannerTests
 {
     private readonly PromptInjectionScanner _scanner;
 

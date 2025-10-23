@@ -5,6 +5,7 @@ namespace Andy.Guard.AspNetCore;
 
 /// <summary>
 /// Provides a no-op authorization header for downstream API calls when tokens are not required.
+/// TODO: Remove once we have Entra integration in place.
 /// </summary>
 internal sealed class NoopAuthorizationHeaderProvider : IAuthorizationHeaderProvider
 {
