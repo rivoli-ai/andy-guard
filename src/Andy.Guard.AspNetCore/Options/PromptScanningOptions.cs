@@ -22,7 +22,7 @@ public sealed class PromptScanningOptions
     /// <summary>
     /// When true, short-circuits the pipeline and returns a 4xx response if any scanner detects a threat.
     /// </summary>
-    public bool BlockOnThreat { get; set; } = true;
+    public bool BlockOnThreat { get; set; } = false;
 
     /// <summary>
     /// HTTP status code to return when blocking. Defaults to 400.
