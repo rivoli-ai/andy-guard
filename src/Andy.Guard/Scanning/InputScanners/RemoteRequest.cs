@@ -6,7 +6,7 @@ internal sealed class RemoteRequest
 {
     [JsonPropertyName("text")]
     public string Text { get; init; } = string.Empty;
-    
+
     [JsonPropertyName("model")]
     public string Model { get; init; } = string.Empty;
 }

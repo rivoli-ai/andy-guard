@@ -9,11 +9,11 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
          IConfiguration configuration)
     {
-        services.AddControllers();  
+        services.AddControllers();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
         services.AddHttpClient();
-        
+
         services.AddPromptScanning();
         services.AddModelOutputScanning();
         services.AddDownstreamApi("AndyInference", configuration.GetSection("DownstreamApis:AndyInference"));

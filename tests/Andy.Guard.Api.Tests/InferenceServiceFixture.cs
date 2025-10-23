@@ -95,7 +95,7 @@ public sealed class InferenceServiceFixture : IAsyncLifetime, IDisposable
                 services.AddApplicationServices(context.Configuration);
             })
             .Build();
-        
+
         await _host.StartAsync();
     }
 
@@ -112,14 +112,17 @@ public sealed class InferenceServiceFixture : IAsyncLifetime, IDisposable
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+            return;
         _disposed = true;
         _host?.Dispose();
     }
 
     private static async Task StopContainerAsync(IContainer container)
     {
-        try { await container.StopAsync(); } catch { }
+        try
+        { await container.StopAsync(); }
+        catch { }
         await container.DisposeAsync();
     }
 
