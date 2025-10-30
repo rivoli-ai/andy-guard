@@ -6,6 +6,7 @@ using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using DotNet.Testcontainers.Networks;
 using DotNet.Testcontainers.Configurations;
+using DotNet.Testcontainers.Volumes;
 using Andy.Guard.Api.Extensions;
 using Microsoft.Extensions.Configuration;
 using Andy.Guard.Scanning.Abstractions;
@@ -16,8 +17,13 @@ public sealed class InferenceServiceFixture : IAsyncLifetime, IDisposable
 {
     private const int TokenizerPort = 8000;
     private const int InferencePort = 8080;
+    private const string TokenizerImage = "ghcr.io/rivoli-ai/andy-tokenizer-service:sha-3800b7e";
+    private const string InferenceImage = "ghcr.io/rivoli-ai/andy-inference-service:sha-3800b7e";
+    private const string ModelAssetsImage = "ghcr.io/rivoli-ai/andy-model-assets:v1";
 
     private readonly INetwork _network;
+    private readonly IVolume _modelDataVolume;
+    private readonly IContainer _modelAssetsContainer;
     private readonly IContainer _tokenizerContainer;
     private readonly IContainer _inferenceContainer;
 
@@ -34,8 +40,20 @@ public sealed class InferenceServiceFixture : IAsyncLifetime, IDisposable
 
         var configDirectory = ResolveConfigDirectory();
 
+        _modelDataVolume = new VolumeBuilder()
+            .WithName($"andy-guard-model-data-{Guid.NewGuid():N}")
+            .Build();
+
+        _modelAssetsContainer = new ContainerBuilder()
+            .WithImage(ModelAssetsImage)
+            .WithName($"andy-guard-model-assets-{Guid.NewGuid():N}")
+            .WithNetwork(_network)
+            .WithVolumeMount(_modelDataVolume, "/models", AccessMode.ReadWrite)
+            .WithCommand("/bin/sh", "-c", "while true; do sleep 3600; done")
+            .Build();
+
         _tokenizerContainer = new ContainerBuilder()
-            .WithImage("andy-inference-models-tokenizer-service:latest")
+            .WithImage(TokenizerImage)
             .WithName($"andy-guard-tokenizer-{Guid.NewGuid():N}")
             .WithNetwork(_network)
             .WithNetworkAliases("tokenizer-service")
@@ -50,12 +68,15 @@ public sealed class InferenceServiceFixture : IAsyncLifetime, IDisposable
             .Build();
 
         _inferenceContainer = new ContainerBuilder()
-            .WithImage("andy-inference-models-inference-service:latest")
+            .WithImage(InferenceImage)
             .WithName($"andy-guard-inference-{Guid.NewGuid():N}")
             .WithNetwork(_network)
             .WithPortBinding(InferencePort, true)
             .WithEnvironment("TokenizerServiceUrl", "http://tokenizer-service:8000")
             .WithEnvironment("ModelConfiguration__TokenizerServiceUrl", "http://tokenizer-service:8000")
+            .WithEnvironment("ModelsConfigPath", "/app/config/models.json")
+            .WithBindMount(configDirectory, "/app/config", AccessMode.ReadOnly)
+            .WithVolumeMount(_modelDataVolume, "/app/models", AccessMode.ReadOnly)
             .WithWaitStrategy(
                 Wait.ForUnixContainer()
                     .UntilHttpRequestIsSucceeded(r => r
@@ -74,6 +95,8 @@ public sealed class InferenceServiceFixture : IAsyncLifetime, IDisposable
     public async Task InitializeAsync()
     {
         await _network.CreateAsync();
+        await _modelDataVolume.CreateAsync();
+        await _modelAssetsContainer.StartAsync();
         await _tokenizerContainer.StartAsync();
         await _inferenceContainer.StartAsync();
         var dynamicHostPort = _inferenceContainer.GetMappedPublicPort(InferencePort);
@@ -106,7 +129,9 @@ public sealed class InferenceServiceFixture : IAsyncLifetime, IDisposable
 
         await StopContainerAsync(_inferenceContainer);
         await StopContainerAsync(_tokenizerContainer);
+        await StopContainerAsync(_modelAssetsContainer);
         await _network.DeleteAsync();
+        await _modelDataVolume.DeleteAsync();
         _host?.Dispose();
     }
 
