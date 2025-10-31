@@ -1,6 +1,6 @@
 using System.Net;
-using Docker.DotNet;
 using Andy.Guard.InputScanners;
+using Docker.DotNet;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using DotNet.Testcontainers.Builders;
@@ -11,7 +11,7 @@ using DotNet.Testcontainers.Volumes;
 using Andy.Guard.Api.Extensions;
 using Microsoft.Extensions.Configuration;
 using Andy.Guard.Scanning.Abstractions;
-using Xunit.Sdk;
+using Xunit;
 
 namespace Andy.Guard.Tests;
 
@@ -94,7 +94,7 @@ public sealed class InferenceServiceFixture : IAsyncLifetime, IDisposable
         .Single()
         ?? throw new InvalidOperationException("Host not initialized.");
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         try
         {
@@ -127,11 +127,12 @@ public sealed class InferenceServiceFixture : IAsyncLifetime, IDisposable
         }
         catch (DockerApiException ex) when (IsBridgePluginMissing(ex))
         {
-            throw SkipException.ForSkip("Docker bridge network plugin is unavailable; integration tests require bridge networking.");
+            await CleanupAfterFailureAsync();
+            Assert.Skip("Docker bridge network plugin is unavailable; integration tests require bridge networking.");
         }
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (_host != null)
             await _host.StopAsync();
@@ -163,12 +164,34 @@ public sealed class InferenceServiceFixture : IAsyncLifetime, IDisposable
     private static bool IsBridgePluginMissing(DockerApiException exception)
     {
         if (exception.StatusCode != HttpStatusCode.NotFound)
-        {
             return false;
-        }
 
         var message = exception.ResponseBody ?? exception.Message;
-        return message?.IndexOf("plugin bridge", StringComparison.OrdinalIgnoreCase) >= 0;
+        if (string.IsNullOrWhiteSpace(message))
+            return false;
+
+        return message.IndexOf("plugin", StringComparison.OrdinalIgnoreCase) >= 0
+            && message.IndexOf("bridge", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    private async Task CleanupAfterFailureAsync()
+    {
+        await IgnoreFailureAsync(() => StopContainerAsync(_inferenceContainer));
+        await IgnoreFailureAsync(() => StopContainerAsync(_tokenizerContainer));
+        await IgnoreFailureAsync(() => StopContainerAsync(_modelAssetsContainer));
+        await IgnoreFailureAsync(() => _network.DeleteAsync());
+        await IgnoreFailureAsync(() => _modelDataVolume.DeleteAsync());
+    }
+
+    private static async Task IgnoreFailureAsync(Func<Task> cleanup)
+    {
+        try
+        {
+            await cleanup();
+        }
+        catch
+        {
+        }
     }
 
     private static string ResolveConfigDirectory()
