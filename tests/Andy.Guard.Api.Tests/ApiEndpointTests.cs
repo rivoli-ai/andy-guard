@@ -17,6 +17,8 @@ public class ApiEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         WebApplicationFactory<Program> factory,
         InferenceServiceFixture inferenceFixture)
     {
+        inferenceFixture.SkipIfUnavailable();
+
         if (string.IsNullOrWhiteSpace(inferenceFixture.AndyInferenceBaseUrl))
         {
             throw new InvalidOperationException("Inference fixture did not expose a base URL.");

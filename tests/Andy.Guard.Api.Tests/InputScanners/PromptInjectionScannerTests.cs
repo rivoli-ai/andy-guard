@@ -11,6 +11,7 @@ public sealed class PromptInjectionScannerTests
 
     public PromptInjectionScannerTests(InferenceServiceFixture fixture)
     {
+        fixture.SkipIfUnavailable();
         _scanner = fixture.Scanner;
     }
 

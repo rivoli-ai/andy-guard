@@ -31,8 +31,11 @@ public sealed class InferenceServiceFixture : IAsyncLifetime, IDisposable
 
     private IHost? _host;
     private bool _disposed;
+    private string? _skipReason;
 
     public string AndyInferenceBaseUrl { get; private set; } = string.Empty;
+    public bool IsAvailable => _skipReason is null;
+    public string? SkipReason => _skipReason;
 
     public InferenceServiceFixture()
     {
@@ -88,11 +91,18 @@ public sealed class InferenceServiceFixture : IAsyncLifetime, IDisposable
             .Build();
     }
 
-    public PromptInjectionScanner Scanner => _host?.Services
-        .GetRequiredService<IEnumerable<IInputScanner>>()
-        .OfType<PromptInjectionScanner>()
-        .Single()
-        ?? throw new InvalidOperationException("Host not initialized.");
+    public PromptInjectionScanner Scanner
+    {
+        get
+        {
+            SkipIfUnavailable();
+            return _host?.Services
+                .GetRequiredService<IEnumerable<IInputScanner>>()
+                .OfType<PromptInjectionScanner>()
+                .Single()
+                ?? throw new InvalidOperationException("Host not initialized.");
+        }
+    }
 
     public async ValueTask InitializeAsync()
     {
@@ -124,16 +134,27 @@ public sealed class InferenceServiceFixture : IAsyncLifetime, IDisposable
                 .Build();
 
             await _host.StartAsync();
+            _skipReason = null;
         }
         catch (DockerApiException ex) when (IsBridgePluginMissing(ex))
         {
             await CleanupAfterFailureAsync();
-            Assert.Skip("Docker bridge network plugin is unavailable; integration tests require bridge networking.");
+            _skipReason = "Docker bridge network plugin is unavailable; integration tests require bridge networking.";
+            AndyInferenceBaseUrl = string.Empty;
+            _host = null;
+            return;
         }
     }
 
     public async ValueTask DisposeAsync()
     {
+        if (!IsAvailable)
+        {
+            await CleanupAfterFailureAsync();
+            _host?.Dispose();
+            return;
+        }
+
         if (_host != null)
             await _host.StopAsync();
 
@@ -151,6 +172,14 @@ public sealed class InferenceServiceFixture : IAsyncLifetime, IDisposable
             return;
         _disposed = true;
         _host?.Dispose();
+    }
+
+    public void SkipIfUnavailable()
+    {
+        if (_skipReason is not null)
+        {
+            Assert.Skip(_skipReason);
+        }
     }
 
     private static async Task StopContainerAsync(IContainer container)
