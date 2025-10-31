@@ -1,4 +1,5 @@
 using System.Net;
+using Docker.DotNet;
 using Andy.Guard.InputScanners;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -10,6 +11,7 @@ using DotNet.Testcontainers.Volumes;
 using Andy.Guard.Api.Extensions;
 using Microsoft.Extensions.Configuration;
 using Andy.Guard.Scanning.Abstractions;
+using Xunit.Sdk;
 
 namespace Andy.Guard.Tests;
 
@@ -94,32 +96,39 @@ public sealed class InferenceServiceFixture : IAsyncLifetime, IDisposable
 
     public async Task InitializeAsync()
     {
-        await _network.CreateAsync();
-        await _modelDataVolume.CreateAsync();
-        await _modelAssetsContainer.StartAsync();
-        await _tokenizerContainer.StartAsync();
-        await _inferenceContainer.StartAsync();
-        var dynamicHostPort = _inferenceContainer.GetMappedPublicPort(InferencePort);
-        AndyInferenceBaseUrl = $"http://localhost:{dynamicHostPort}/api";
-        var overrideConfig = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["DownstreamApis:AndyInference:BaseUrl"] = AndyInferenceBaseUrl,
-            })
-            .Build();
+        try
+        {
+            await _network.CreateAsync();
+            await _modelDataVolume.CreateAsync();
+            await _modelAssetsContainer.StartAsync();
+            await _tokenizerContainer.StartAsync();
+            await _inferenceContainer.StartAsync();
+            var dynamicHostPort = _inferenceContainer.GetMappedPublicPort(InferencePort);
+            AndyInferenceBaseUrl = $"http://localhost:{dynamicHostPort}/api";
+            var overrideConfig = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["DownstreamApis:AndyInference:BaseUrl"] = AndyInferenceBaseUrl,
+                })
+                .Build();
 
-        _host = Host.CreateDefaultBuilder()
-            .ConfigureAppConfiguration((context, config) =>
-            {
-                config.AddConfiguration(overrideConfig);
-            })
-            .ConfigureServices((context, services) =>
-            {
-                services.AddApplicationServices(context.Configuration);
-            })
-            .Build();
+            _host = Host.CreateDefaultBuilder()
+                .ConfigureAppConfiguration((context, config) =>
+                {
+                    config.AddConfiguration(overrideConfig);
+                })
+                .ConfigureServices((context, services) =>
+                {
+                    services.AddApplicationServices(context.Configuration);
+                })
+                .Build();
 
-        await _host.StartAsync();
+            await _host.StartAsync();
+        }
+        catch (DockerApiException ex) when (IsBridgePluginMissing(ex))
+        {
+            throw SkipException.ForSkip("Docker bridge network plugin is unavailable; integration tests require bridge networking.");
+        }
     }
 
     public async Task DisposeAsync()
@@ -149,6 +158,17 @@ public sealed class InferenceServiceFixture : IAsyncLifetime, IDisposable
         { await container.StopAsync(); }
         catch { }
         await container.DisposeAsync();
+    }
+
+    private static bool IsBridgePluginMissing(DockerApiException exception)
+    {
+        if (exception.StatusCode != HttpStatusCode.NotFound)
+        {
+            return false;
+        }
+
+        var message = exception.ResponseBody ?? exception.Message;
+        return message?.IndexOf("plugin bridge", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     private static string ResolveConfigDirectory()
