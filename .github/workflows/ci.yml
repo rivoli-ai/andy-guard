@@ -52,7 +52,7 @@ jobs:
 
     - name: Upload test results
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: test-results-${{ matrix.os }}
         path: |
@@ -121,14 +121,14 @@ jobs:
       run: dotnet pack --no-build --configuration Release --output ./artifacts
 
     - name: Upload NuGet packages
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: nuget-packages
         path: ./artifacts/*.nupkg
         retention-days: 30
 
     - name: Upload symbol packages
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: symbol-packages
         path: ./artifacts/*.snupkg
